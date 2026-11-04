@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+const base=new URL('../public/',import.meta.url);
+const html=readFileSync(new URL('play.html',base),'utf8');
+const js=readFileSync(new URL('game.mjs',base),'utf8');
+const css=readFileSync(new URL('game-ui.css',base),'utf8');
+test('game base styles extracted from inline HTML',()=>{assert.doesNotMatch(html,/<style>/);assert.match(html,/href="\/game-base.css"/)});
+test('focus loss clears controls',()=>{assert.match(js,/addEventListener\('blur',clearControls\)/);assert.match(js,/document.hidden/)});
+test('paused game clears held keys',()=>assert.match(js,/function togglePause\(\)\{if\(!started\)return;clearControls\(\)/));
+test('game hotkeys ignore editable fields and repeated actions',()=>{assert.match(js,/contenteditable/);assert.match(js,/e.repeat/)});
+test('HUD includes safe areas and narrow layouts',()=>{assert.match(css,/safe-area-inset/);assert.match(css,/@media\(max-width:450px\)/)});

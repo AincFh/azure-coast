@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {generateTile,desiredTiles,updateTiles,pedestrianStep,canEnterVehicle} from '../public/world.mjs';
+test('tile generation is deterministic and contains real geometry descriptors',()=>{const a=generateTile(3,5);assert.deepEqual(a,generateTile(3,5));assert.ok(a.objects.length>4);assert.ok(a.objects.every(o=>Number.isFinite(o.x)&&Number.isFinite(o.z)))});
+test('streaming retains bounded active tiles and disposes distant ones',()=>{const map=new Map(),disposed=[];updateTiles(map,0,0,t=>t,(o,k)=>disposed.push(k));assert.equal(map.size,25);updateTiles(map,5000,5000,t=>t,(o,k)=>disposed.push(k));assert.equal(map.size,25);assert.equal(disposed.length,25)});
+test('coastal biome produces palms, not skyscrapers',()=>{const t=generateTile(0,-6);assert.ok(t.coastal);assert.ok(t.objects.every(o=>o.kind==='palm'))});
+test('pedestrian movement and car entry',()=>{const p=pedestrianStep({x:0,z:0,heading:0},{forward:true,sprint:true},1);assert.equal(p.z,-9);assert.ok(canEnterVehicle(p,{x:0,z:-10}));assert.ok(!canEnterVehicle(p,{x:0,z:30}))});
+test('world grid is stable',()=>{assert.equal(desiredTiles(0,0,1).length,9);assert.equal(desiredTiles(250,250,2).length,25)});

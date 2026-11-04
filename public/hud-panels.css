@@ -1,0 +1,14 @@
+/* HUD panels are collapsed on constrained viewports; they never cover the mission. */
+.hud-panel-toggle{display:none!important}
+.hud-panel-body[hidden]{display:none!important}
+@media(max-width:850px){
+  .environment-controls,.economy{top:max(58px,env(safe-area-inset-top));padding:5px 7px;width:auto;max-width:calc(50vw - 16px);min-width:0;border-radius:12px;gap:0;z-index:7}
+  .environment-controls{right:8px}.economy{left:8px;right:auto}
+  .hud-panel-toggle{display:block!important;min-height:32px!important;padding:6px 10px!important;margin:0!important;border-radius:8px!important;background:#22485b!important;color:#fff!important;font-size:12px!important}
+  .hud-panel-body{min-width:0;max-width:min(250px,calc(100vw - 32px));padding:8px 2px 2px}
+  .environment-controls.panel-open,.economy.panel-open{max-width:min(260px,calc(100vw - 16px));width:min(260px,calc(100vw - 16px))}
+  .environment-controls .hud-panel-body{display:grid;gap:7px}
+  .object{top:116px!important;left:8px!important;right:8px!important;width:auto!important;max-width:calc(100vw - 16px)!important}
+}
+@media(max-width:420px){.environment-controls,.economy{top:52px}.object{top:105px!important}}
+@media(max-height:540px){.environment-controls,.economy{top:8px}.object{display:none!important}}

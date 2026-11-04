@@ -1,0 +1,102 @@
+
+> azure-coast-studio@0.1.0 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: website routes, API, security and assets
+ok 1 - website routes, API, security and assets
+  ---
+  duration_ms: 85.183188
+  type: 'test'
+  ...
+# Subtest: five route stages, each unique
+ok 2 - five route stages, each unique
+  ---
+  duration_ms: 1.602045
+  type: 'test'
+  ...
+# Subtest: missions only pay once and in sequence
+ok 3 - missions only pay once and in sequence
+  ---
+  duration_ms: 0.276447
+  type: 'test'
+  ...
+# Subtest: car acceleration and braking are bounded
+ok 4 - car acceleration and braking are bounded
+  ---
+  duration_ms: 3.085867
+  type: 'test'
+  ...
+# Subtest: progress sanitizes corrupt saves
+ok 5 - progress sanitizes corrupt saves
+  ---
+  duration_ms: 0.128839
+  type: 'test'
+  ...
+# Subtest: collision damage increases with speed
+ok 6 - collision damage increases with speed
+  ---
+  duration_ms: 0.259432
+  type: 'test'
+  ...
+# Subtest: gameplay UI and driving controls wired
+ok 7 - gameplay UI and driving controls wired
+  ---
+  duration_ms: 1.349508
+  type: 'test'
+  ...
+# Subtest: website navigation and data module
+ok 8 - website navigation and data module
+  ---
+  duration_ms: 2.254892
+  type: 'test'
+  ...
+# Subtest: all concept art assets exist
+ok 9 - all concept art assets exist
+  ---
+  duration_ms: 0.792848
+  type: 'test'
+  ...
+# Subtest: tile generation is deterministic and contains real geometry descriptors
+ok 10 - tile generation is deterministic and contains real geometry descriptors
+  ---
+  duration_ms: 2.481305
+  type: 'test'
+  ...
+# Subtest: streaming retains bounded active tiles and disposes distant ones
+ok 11 - streaming retains bounded active tiles and disposes distant ones
+  ---
+  duration_ms: 2.658516
+  type: 'test'
+  ...
+# Subtest: coastal biome produces palms, not skyscrapers
+ok 12 - coastal biome produces palms, not skyscrapers
+  ---
+  duration_ms: 0.221437
+  type: 'test'
+  ...
+# Subtest: pedestrian movement and car entry
+ok 13 - pedestrian movement and car entry
+  ---
+  duration_ms: 0.272792
+  type: 'test'
+  ...
+# Subtest: world grid is stable
+ok 14 - world grid is stable
+  ---
+  duration_ms: 0.18298
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 216.819874
+
+> azure-coast-studio@0.1.0 check
+> node --check server.mjs && node --check public/app.mjs && node --check public/game.mjs
+

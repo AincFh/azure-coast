@@ -1,0 +1,70 @@
+{
+  "release": "BLOCKED",
+  "checks": [
+    {
+      "name": "官网入口",
+      "path": "public/index.html",
+      "pass": true
+    },
+    {
+      "name": "游戏入口",
+      "path": "public/play.html",
+      "pass": true
+    },
+    {
+      "name": "基础驾驶逻辑",
+      "path": "public/game.mjs",
+      "pass": true
+    },
+    {
+      "name": "任务和存档",
+      "path": "public/simulation.mjs",
+      "pass": true
+    },
+    {
+      "name": "碰撞处理",
+      "path": "public/physics.mjs",
+      "pass": true
+    },
+    {
+      "name": "环境系统",
+      "path": "public/environment.mjs",
+      "pass": true
+    },
+    {
+      "name": "可验证的本地角色模型与动画资产",
+      "path": "public/assets/characters/manifest.json",
+      "pass": false
+    },
+    {
+      "name": "可验证的本地车辆模型资产",
+      "path": "public/assets/vehicles/manifest.json",
+      "pass": false
+    },
+    {
+      "name": "可验证的本地建筑与街区资产",
+      "path": "public/assets/city/manifest.json",
+      "pass": false
+    },
+    {
+      "name": "资产许可证及来源清单",
+      "path": "ASSET_LICENSES.md",
+      "pass": false
+    },
+    {
+      "name": "浏览器端到端验收结果",
+      "path": "qa/browser-e2e.json",
+      "pass": false
+    },
+    {
+      "name": "375/768/1024/1440 响应式截图验收",
+      "path": "qa/responsive-evidence.json",
+      "pass": false
+    },
+    {
+      "name": "目标设备性能验收",
+      "path": "qa/performance.json",
+      "pass": false
+    }
+  ]
+}

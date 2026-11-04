@@ -1,0 +1,5 @@
+export const districts=[{id:'bay',name:'海湾中心',en:'BAY CENTRAL',x:.51,y:.42,kind:'商业 / 天际线'},{id:'marina',name:'游艇码头',en:'MARINA POINT',x:.31,y:.67,kind:'海港 / 娱乐'},{id:'palms',name:'棕榈海岸',en:'PALM COAST',x:.18,y:.34,kind:'海滩 / 休闲'},{id:'cliff',name:'日落山崖',en:'SUNSET CLIFF',x:.73,y:.19,kind:'山地 / 豪宅'},{id:'harbor',name:'工业港湾',en:'HARBOR SOUTH',x:.74,y:.77,kind:'港口 / 物流'},{id:'oldtown',name:'旧城艺术区',en:'OLD QUARTER',x:.57,y:.64,kind:'文化 / 夜生活'}];
+export const vehicles={gt:{name:'SOLSTICE GT',detail:'SPORT / 312 KM/H / RWD',color:'#d5b588'},suv:{name:'VANTAGE X',detail:'SUV / 245 KM/H / AWD',color:'#91aeb4'},ev:{name:'MARINA E',detail:'ELECTRIC / 260 KM/H / AWD',color:'#b3d4c7'}};
+export function routeDistance(ids){let sum=0;for(let i=1;i<ids.length;i++){const a=districts.find(d=>d.id===ids[i-1]),b=districts.find(d=>d.id===ids[i]);if(a&&b)sum+=Math.hypot(a.x-b.x,a.y-b.y)*22}return Math.round(sum*10)/10}
+export function uniqueStops(ids){return [...new Set(ids)].filter(id=>districts.some(d=>d.id===id))}
+export function formatHour(hour){return String(Math.max(0,Math.min(23,Number(hour)||0))).padStart(2,'0')+':30'}
