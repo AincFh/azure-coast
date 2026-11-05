@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import {CITY_STOPS,cleanStops,loadPlannedStops,createJourney,restoreJourney,progressJourney,nextJourneyStop,cancelJourney,roadRoute,navigationHint,headingCue,polylineDistance} from '../public/journey.mjs';
 import {intersectsBuilding,nearbyObstacles} from '../public/physics.mjs';
 
-test('all six planner destinations map to unique safe game positions',()=>{
- assert.equal(CITY_STOPS.length,6);
+test('six districts and four energy stations map to unique, accessible game positions',()=>{
+ assert.equal(CITY_STOPS.length,10);
+ assert.equal(CITY_STOPS.filter(s=>s.id.startsWith('fuel-')).length,4);
  assert.equal(new Set(CITY_STOPS.map(x=>x.id)).size,6);
  for(const stop of CITY_STOPS){assert.ok(Number.isFinite(stop.x)&&Number.isFinite(stop.z));assert.equal(intersectsBuilding(stop.x,stop.z,2.3,nearbyObstacles(stop.x,stop.z)),false,stop.id)}
 });
@@ -47,4 +48,16 @@ test('turn cues are deterministic and orientation aware',()=>{
  assert.equal(headingCue(0,{x:0,z:0},{x:-100,z:0}),'左转');
  assert.equal(headingCue(0,{x:0,z:0},{x:0,z:100}),'掉头');
  assert.ok(navigationHint({x:0,z:12},0,CITY_STOPS[0]).roadDistance>=0);
+});
+
+test('every refuel waypoint maps to its corresponding physical energy station',async()=>{
+ const {SHOPS}=await import('../public/living-core.mjs');
+ for(const station of SHOPS.filter(s=>s.kind==='energy')){
+  const destination=CITY_STOPS.find(p=>p.id==='fuel-'+station.id);
+  assert.ok(destination,station.id);
+  assert.deepEqual([destination.x,destination.z],[station.x,station.z]);
+  assert.equal(createJourney([destination.id]).stops[0],destination.id);
+  const arrival=progressJourney(createJourney([destination.id]),{x:station.x,z:station.z});
+  assert.equal(arrival.arrived?.id,destination.id);
+ }
 });
