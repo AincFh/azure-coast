@@ -8,6 +8,7 @@ import {navigationHint} from './journey.mjs';
 import {installVisualWorld} from './visual-world.mjs';
 import {createSportsCar} from './vehicle-art.mjs';
 import {createCharacter} from './character-art.mjs';
+import {applySurfaceTextures} from './surface-materials.mjs';
 
 import * as THREE from 'https://esm.sh/three@0.170.0';
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x8bc6d3);scene.fog=new THREE.FogExp2(0xb7d6cf,.0018);const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,1500);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;document.querySelector('#game').append(renderer.domElement);
@@ -34,6 +35,7 @@ function flushStaticDetails(){
   }
   staticBatches.clear();
 }
+applySurfaceTextures(THREE,{asphalt,concrete,sidewalk,buildingMats});
 const roadMark=mat(0xc1c2b0);const roadSpacing=100,world=700;box(world*2,.2,world*2,concrete,0,-.2,0);
 for(let k=-6;k<=6;k++){box(20,.03,1400,asphalt,k*100,.02,0);box(1400,.03,20,asphalt,0,.025,k*100);for(let j=-68;j<69;j++){staticDetail(.17,.015,5,roadMark,k*100,.052,j*10);staticDetail(5,.015,.17,roadMark,j*10,.055,k*100)}box(2,.09,1400,sidewalk,k*100+12,.02,0);box(2,.09,1400,sidewalk,k*100-12,.02,0);box(1400,.09,2,sidewalk,0,.02,k*100+12);box(1400,.09,2,sidewalk,0,.02,k*100-12)}
 const visuals=installVisualWorld(THREE,scene);
