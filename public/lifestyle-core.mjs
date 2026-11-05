@@ -67,8 +67,8 @@ export function restoreLifestyle(raw){
   readyAt===started+recipe?.duration;
  const cooking=recipe&&validClock?{recipeId:recipe.id,startedAt:started,readyAt}:null;
  return {...base,
-  hunger:Math.round(limit(raw.hunger,0,100)*100)/100,
-  energy:Math.round(limit(raw.energy,0,100)*100)/100,
+  hunger:Math.round(limit(raw.hunger,0,100)*10000)/10000,
+  energy:Math.round(limit(raw.energy,0,100)*10000)/10000,
   inventory,meals,cooking,
   prepared:int(raw.prepared,100000),
   spent:int(raw.spent,1000000000),eaten:int(raw.eaten,100000),slept:int(raw.slept,100000)};
@@ -174,8 +174,8 @@ export function tickLifestyle(raw,dt,{active=true,onFoot=false,sprinting=false}=
  if(!time)return state;
  const hungerLoss=time*(onFoot?(sprinting?.026:.014):.006);
  const energyLoss=time*(onFoot?(sprinting?.052:.019):.004);
- return {...state,hunger:Math.max(0,Math.round((state.hunger-hungerLoss)*100)/100),
-  energy:Math.max(0,Math.round((state.energy-energyLoss)*100)/100)};
+ return {...state,hunger:Math.max(0,Math.round((state.hunger-hungerLoss)*10000)/10000),
+  energy:Math.max(0,Math.round((state.energy-energyLoss)*10000)/10000)};
 }
 export function walkingPace(raw){
  const {hunger,energy}=restoreLifestyle(raw);
