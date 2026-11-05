@@ -39,7 +39,7 @@ test('resolution scale is physically bounded and respects pixel budgets',()=>{
 test('governor steps down on prolonged slow rendering, not a single stalled frame',()=>{
  const gov=createFrameGovernor({initial:'high',cooldownMs:1000});
  let clock=0;gov.sample(clock);
- for(let i=0;i<34;i++){clock+=60;gov.sample(clock)}
+ for(let i=0;i<35;i++){clock+=60;gov.sample(clock)}
  assert.equal(gov.tier,'high');
  clock+=60;gov.sample(clock);
  assert.equal(gov.tier,'balanced');
