@@ -67,3 +67,5 @@
  .living-columns{grid-template-columns:1fr 1fr}
  .life-vitals{bottom:120px}
 }
+
+body.home-interior .life-vitals,body.home-interior .living-prompt{display:none!important}
