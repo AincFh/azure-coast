@@ -3,8 +3,9 @@
  * npm package. No external CDN is needed during actual gameplay.
  */
 import {mkdir,copyFile,readFile,stat} from 'node:fs/promises';
-import {join,resolve} from 'node:path';
-const root=resolve(import.meta.dirname,'..');
+import {join,resolve,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const pkg=JSON.parse(await readFile(join(root,'package.json'),'utf8'));
 const version=pkg.dependencies?.three;
 if(version!=='0.170.0')throw Error('Expected audited Three.js 0.170.0 pin, got '+version);
