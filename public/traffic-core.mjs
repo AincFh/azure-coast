@@ -15,14 +15,21 @@ export function trafficPosition(car){
   {x:car.coord,z:car.road*TRAFFIC_GRID-car.dir*4};
 }
 export function createTrafficAgents(count=42){
- const amount=clamp(Number.isFinite(count)?Math.floor(count):0,0,90);
- return Array.from({length:amount},(_,id)=>{
+ const amount=clamp(Number.isFinite(count)?Math.floor(count):0,0,90),cars=[];
+ for(let id=0;id<amount;id++){
   const axis=id%4<2?'z':'x',road=((id*7)%11)-5,dir=id%2?1:-1;
   let coord=-570+trafficHash(id,13)*1140;
   if(road===0&&Math.abs(coord)<90)coord+=dir*105;
-  return {id,axis,road,dir,coord,speed:4+trafficHash(id,17)*6,
-   cruise:8+trafficHash(id,19)*7,odometer:0};
- });
+  // Reproducible spawn separation; never create overlapping vehicles in one lane.
+  for(let attempt=0;attempt<20;attempt++){
+   const blocked=cars.some(car=>car.axis===axis&&car.road===road&&car.dir===dir&&Math.abs(car.coord-coord)<18);
+   if(!blocked)break;
+   coord=-570+((coord+600+53)%1140);
+  }
+  cars.push({id,axis,road,dir,coord,speed:4+trafficHash(id,17)*6,
+   cruise:8+trafficHash(id,19)*7,odometer:0});
+ }
+ return cars;
 }
 const positiveMod=(x,n)=>((x%n)+n)%n;
 export function signalIsGreen(axis,road,cross,seconds){
