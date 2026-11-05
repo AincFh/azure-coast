@@ -22,7 +22,7 @@ export function setupMobileActionCenter(doc=document,win=doc.defaultView){
   const proxy=event.target.closest?.('[data-action-proxy]');
   if(proxy){
    const id=proxy.dataset.actionProxy;
-   const allowed=['activityOpen','garageOpen','housingOpen','fleetOpen','citizenOpen'];
+   const allowed=['activityOpen','garageOpen','housingOpen','fleetOpen','citizenOpen','livingOpen'];
    if(!allowed.includes(id))return;
    setOpen(false);
    $(id)?.click?.();
