@@ -70,6 +70,11 @@ async def main():
                     await page.locator('#activityOpen').click()
                     assert '海岸运送' in await page.locator('#activityActiveDetail').inner_text()
                     await page.locator('#activityClose').click()
+                    await page.locator('#garageOpen').click()
+                    await page.locator('#garagePanel').wait_for(state='visible', timeout=10000)
+                    assert await page.locator('#garageOfferList .garage-upgrade').count() == 3
+                    assert '可购买' in await page.locator('#garageAccess').inner_text()
+                    await page.locator('#garageClose').click()
                     await page.locator('#mapBtn').click()
                     await page.locator('#mapOverlay').wait_for(state='visible')
                     await page.locator('#mapStopList [data-stop-id="cliff"]').click()
@@ -85,6 +90,25 @@ async def main():
                     await page.locator('#environmentWeather').evaluate("""e => {e.value='clear';e.dispatchEvent(new Event('change',{bubbles:true}))}""")
                     await page.wait_for_timeout(450)
                     await page.screenshot(path=str(OUT / f'{label}-drive.png'), timeout=90000, animations='disabled')
+                    if width == 1440:
+                        await page.evaluate("""() => {
+                          const record = JSON.parse(localStorage.getItem('azure-coast-driving-v2')||'{}');
+                          record.credits = 5000;
+                          localStorage.setItem('azure-coast-driving-v2', JSON.stringify(record));
+                        }""")
+                        await page.reload(wait_until='domcontentloaded')
+                        await page.locator('#game canvas').wait_for(timeout=45000)
+                        await page.locator('#begin').click()
+                        await page.locator('#garageOpen').click()
+                        await page.locator('#garagePanel').wait_for(state='visible')
+                        await page.locator('#garageOfferList [data-upgrade="engine"]').click()
+                        state = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
+                        assert state['credits'] == 3200, 'Garage debit did not use the driving wallet'
+                        assert state['garage']['engine'] == 1, 'Garage upgrade not saved atomically'
+                        await page.locator('#garageClose').click()
+                        await page.reload(wait_until='domcontentloaded')
+                        after = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
+                        assert after['garage']['engine'] == 1 and after['credits'] == 3200, 'Garage progression was lost on reload'
                     assert not page_errors, f'Browser script errors at {label}: {page_errors}'
                     assert not shader_errors, f'WebGL shader errors at {label}: {shader_errors}'
                     print(f'PASS {label}px — home, planner, 3D game, contract dispatch, map, multi-save persistence')
