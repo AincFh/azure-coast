@@ -175,7 +175,7 @@ test('conversational responses are context-sensitive to weather, time, familiari
 
 test('invalid social data cannot spoof unavailable residents or unbounded relationship points',()=>{
  const evil={version:1,met:[4,4,-1,9999,'4'],relationships:{
-  4:999,9999:999},conversations:1e15,insights:['4:greeting','4:invent-money','999:weather','4:city','4:city']};
+  4:999,9999:999},conversations:Infinity,insights:['4:greeting','4:invent-money','999:weather','4:city','4:city']};
  const safe=restoreSocial(evil);
  assert.deepEqual(safe.met,[4]);
  assert.equal(safe.relationships[4],3);
