@@ -21,6 +21,21 @@ test('traffic starts in reproducible marked lanes with finite speeds',()=>{
  for(let i=0;i<100;i++)assert.equal(trafficHash(i,17),trafficHash(i,17));
 });
 
+test('cars never spawn overlapping other vehicles sharing one lane',()=>{
+ const cars=createTrafficAgents(90);
+ for(let i=0;i<cars.length;i++)for(let j=i+1;j<cars.length;j++){
+  const a=cars[i],b=cars[j];
+  if(a.axis===b.axis&&a.road===b.road&&a.dir===b.dir)
+   assert.ok(Math.abs(a.coord-b.coord)>=18, 'same-lane spawn overlap '+a.id+'/'+b.id);
+ }
+});
+test('east-west and north-south traffic obey the same intersection clock',()=>{
+ for(let x=-5;x<=5;x++)for(let z=-5;z<=5;z++){
+  for(let t=0;t<32;t++){
+   assert.equal(signalIsGreen('z',x,z,t)&&signalIsGreen('x',x,z,t),false);
+  }
+ }
+});
 test('traffic lights give exclusive crossing phases with all-red clearance',()=>{
  for(const road of [-5,-2,0,1,5])for(const junction of [-4,0,3]){
   let count=0;
