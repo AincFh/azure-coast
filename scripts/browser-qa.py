@@ -81,9 +81,10 @@ async def main():
 
                     await page.locator('#launchDrive').click()
                     await page.locator('#game canvas').wait_for(timeout=45000)
+                    # The real WebGL browser must fetch a local pinned Three.js
+                    # module; r170 ships single-file ESM, not three.core.js.
                     assets=await page.evaluate("""() => performance.getEntriesByType('resource').map(x=>x.name)""")
                     assert any('/vendor/three/three.module.js' in url for url in assets), assets[:35]
-                    # Three r170 is a single-file module; later versions may split core.
                     assert not any('esm.sh/three' in url for url in assets), assets[:35]
                     await page.locator('#begin').click()
                     await page.locator('#audioOpen').click()
@@ -101,12 +102,33 @@ async def main():
                     saved_audio=await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2')).audio""")
                     assert saved_audio['muted'] is False
                     assert abs(saved_audio['master']-.36) < .00001
+                    # Real living-citizen interaction: leave the vehicle,
+                    # meet the greeter physically standing at the starting
+                    # sidewalk, talk twice and persist the same relationship.
+                    await page.locator('#enterBtn').click()
+                    await page.wait_for_function("""() => document.getElementById('mode')?.textContent?.includes('步行')""",timeout=10000)
+                    await open_city_system(page, width, 'citizenOpen')
+                    await page.locator('#citizenPanel').wait_for(state='visible',timeout=12000)
+                    assert '许' in await page.locator('#citizenOccupation').inner_text() or '市中心' in await page.locator('#citizenOccupation').inner_text()
+                    assert await page.locator('#citizenTopics [data-citizen-topic]').count() == 5
+                    await page.locator('#citizenTopics [data-citizen-topic="greeting"]').click()
+                    await page.locator('#citizenTopics [data-citizen-topic="neighborhood"]').click()
+                    await page.wait_for_function("""() => {
+                      const saved=JSON.parse(localStorage.getItem('azure-coast-driving-v2')||'{}');
+                      return saved.citizens?.met?.includes(4) &&
+                        saved.citizens?.conversations===2;
+                    }""",timeout=10000)
+                    assert '关系 2/3' in await page.locator('#citizenTrait').inner_text()
+                    await page.screenshot(path=str(OUT / f'{label}-conversation.png'),timeout=25000,animations='disabled')
+                    await page.locator('#citizenClose').click()
+                    await page.locator('#enterBtn').click()
+                    await page.wait_for_function("""() => document.getElementById('mode')?.textContent?.includes('车辆驾驶')""",timeout=10000)
                     if width <= 850:
                         assert await page.locator('#actionMenuBtn').is_visible()
                         assert not await page.locator('#activityOpen').is_visible()
                         assert not await page.locator('#fleetOpen').is_visible()
                         await page.locator('#actionMenuBtn').click()
-                        assert await page.locator('#actionDrawer [data-action-proxy]').count() == 4
+                        assert await page.locator('#actionDrawer [data-action-proxy]').count() == 5
                         await page.locator('#actionClose').click()
                     await page.wait_for_function("""() => {
                         const text=document.getElementById('trafficStatus')?.textContent||'';
@@ -223,6 +245,7 @@ async def main():
                         assert restored_wallet['credits'] == 33000, 'Shared garage and housing debits were lost on reload'
                         assert restored_wallet['garage']['engine'] == 1, 'Engine upgrade was lost on reload'
                         assert restored_wallet['fleet']['active'] == 'tide', 'Selected car was lost on reload'
+                        assert 4 in restored_wallet['citizens']['met'], 'Citizen friendship was lost on reload'
                         assert abs(restored_wallet['audio']['master']-.36) < .00001, 'Audio mix was lost on reload'
                         assert 'tide' in restored_wallet['fleet']['owned']
                         assert 'coastal-starter' in restored_wallet['housing']['owned']
@@ -243,7 +266,7 @@ async def main():
                         summary = await page.locator('.live-player-summary').inner_text()
                         assert '33,000' in summary, 'Profile lost actual shared wallet'
                         assert '海湾初始公寓' in summary, 'Profile lost starter property'
-                        assert '已购住宅' in summary and '已摆放家具' in summary and 'TIDE E' in summary
+                        assert '已购住宅' in summary and '已摆放家具' in summary and 'TIDE E' in summary and '已认识居民' in summary
                         await page.screenshot(path=str(OUT / f'{label}-profile.png'), timeout=25000, animations='disabled')
                         # A catalog-listed house must show ownership rather than
                         # a disconnected favorite button when owned in the game save.
@@ -308,12 +331,13 @@ async def main():
                         }""",timeout=20000)
                         restored=await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
                         assert restored['fleet']['active']=='tide', 'Recovery lost active vehicle'
+                        assert 4 in restored['citizens']['met'], 'Recovery lost resident relationships'
                         assert 'coastal-starter' in restored['housing']['owned'], 'Recovery lost home'
                         assert restored['garage']['engine']==1, 'Recovery lost upgrade'
                         assert abs(restored['audio']['master']-.36)<.00001, 'Recovery lost sound mix'
                     assert not page_errors, f'Browser script errors at {label}: {page_errors}'
                     assert not shader_errors, f'WebGL shader errors at {label}: {shader_errors}'
-                    print(f'PASS {label}px — six drivable vehicles, dealer purchases, jobs, garage, housing, traffic, shared wallet and reload')
+                    print(f'PASS {label}px — living NPCs, real dialogue, fleet, housing, sound, career, backup and save restore')
                 except Exception:
                     try:
                         await page.screenshot(path=str(OUT / f'{label}-failure.png'), timeout=10000, animations='disabled')
