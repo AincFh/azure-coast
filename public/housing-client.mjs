@@ -188,6 +188,7 @@ export function setupHousing({
  return {
   open:()=>setOpen(true),close:()=>setOpen(false),toggle:()=>setOpen(!open),
   isOpen:()=>open,inside:()=>!!insideId,decorating:()=>designOpen,
+  currentHome:()=>insideId,interiorPosition:()=>({...player}),
   enter,exit,toggleDecorate:()=>setDecorate(!designOpen),closeDecorate:()=>setDecorate(false),
   canInteract:()=>getPlayer().mode==='foot'&&!!nearestResidence(getPlayer().position,19),
   interact:()=>{
