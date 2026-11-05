@@ -55,6 +55,7 @@ async def main():
                     await page.locator('#launchDrive').click()
                     await page.locator('#game canvas').wait_for(timeout=45000)
                     await page.locator('#begin').click()
+                    await page.wait_for_function("""() => /^交通 \d+\/45 · \d+ km\/h$/.test(document.getElementById('trafficStatus')?.textContent || '')""", timeout=15000)
                     await page.locator('#navDestination').wait_for(state='visible', timeout=10000)
                     assert await page.locator('#navDestination').inner_text() == '海湾中心'
                     assert '雨天' in await page.locator('#environmentLabel').inner_text()
