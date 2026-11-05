@@ -1,0 +1,50 @@
+/* AZURE COAST — native render-quality controls, keyboard usable and mobile safe. */
+.quality-panel[hidden],.render-stats-overlay[hidden]{display:none!important}
+.quality-panel{position:fixed;inset:0;z-index:70;display:grid;place-items:center;
+ background:rgba(3,17,28,.83);backdrop-filter:blur(18px);
+ padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
+ max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+ color:#f5fbfa;font:400 14px/1.5 system-ui,sans-serif}
+.quality-shell{width:min(630px,100%);max-height:calc(100dvh - 24px);min-height:0;
+ display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(200,237,228,.32);
+ border-radius:20px;background:linear-gradient(147deg,#13394b,#091d2d);
+ box-shadow:0 26px 100px #000a}
+.quality-header{display:flex;gap:22px;align-items:flex-start;justify-content:space-between;
+ padding:22px 24px;border-bottom:1px solid #d4eee52a}
+.quality-header small{color:#a3e9d4;font-size:10px;letter-spacing:2px}
+.quality-header h2{font-size:27px;font-weight:630;margin:5px 0 7px}
+.quality-header p{color:#b8d0d1;max-width:420px;margin:0;font-size:12px}
+.quality-header button{flex:none;margin:0;padding:9px 12px;border-radius:9px;
+ border:1px solid #ffffff45;background:#ffffff14;color:#f9fffb;min-height:39px}
+.quality-body{overflow-y:auto;padding:22px 24px;display:flex;flex-direction:column;gap:13px}
+.quality-label{font-weight:650;color:#e2f4ef}
+#qualityMode{width:100%;padding:12px 14px;border:1px solid #81baad78;
+ border-radius:10px;background:#193e4c;color:#fff;font:500 14px/1.4 system-ui,sans-serif;
+ color-scheme:dark;min-height:48px}
+.quality-note{font-size:12px;color:#b4cbd0;margin:0;line-height:1.65}
+.quality-checkbox{display:flex;align-items:center;gap:12px;padding:13px 15px;
+ border-radius:10px;border:1px solid #c5eadf30;background:#ffffff08;cursor:pointer}
+.quality-checkbox input{width:19px;height:19px;accent-color:#80e3cc;flex:none}
+.quality-metrics{display:grid;grid-template-columns:1fr;gap:1px;overflow:hidden;
+ border-radius:12px;border:1px solid #b7e0d344;background:#4b888028}
+.quality-metrics>div{display:grid;gap:4px;padding:12px 15px;background:#102f3a}
+.quality-metrics small{color:#9abfbb;font-size:11px}
+.quality-metrics strong{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.quality-panel button:focus-visible,.quality-panel select:focus-visible,
+.quality-panel input:focus-visible{outline:3px solid #afe9db;outline-offset:3px}
+.render-stats-overlay{position:fixed;top:72px;left:50%;z-index:8;transform:translateX(-50%);
+ width:max-content;max-width:calc(100vw - 24px);border-radius:999px;padding:7px 13px;
+ background:rgba(9,32,43,.87);border:1px solid #aee9d56b;
+ color:#c9f5e8;font:600 11px/1.4 system-ui,sans-serif;
+ font-variant-numeric:tabular-nums;text-align:center;pointer-events:none}
+@media(max-width:600px){
+ .quality-header{padding:17px 16px;gap:12px}
+ .quality-header h2{font-size:23px}
+ .quality-header p{font-size:11px}
+ .quality-body{padding:16px;gap:11px}
+ #qualityMode{font-size:13px}
+ .render-stats-overlay{top:81px;font-size:10px;padding:5px 9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .quality-panel,.quality-shell,.render-stats-overlay{transition:none!important}
+}
