@@ -1,0 +1,18 @@
+/* AZURE COAST / same-origin game-to-website progress panel. */
+.live-player-summary{
+  margin:21px 0;
+  border:1px solid #9fb8af77;
+  border-radius:14px;
+  background:linear-gradient(145deg,#f1f7f2,#e3ece8);
+  color:#183940;
+  padding:17px;
+}
+.live-player-summary>small{display:block;font:600 10px/1.5 system-ui;color:#547c78;letter-spacing:1px}
+.live-player-summary h3{font-size:20px!important;margin:4px 0 14px!important;color:#123843}
+.live-player-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.live-player-metrics>div{display:flex;flex-direction:column;gap:5px;min-width:0;border:1px solid #cadbd5;background:#ffffffc0;padding:10px;border-radius:9px}
+.live-player-metrics strong{font:650 20px/1.2 system-ui;white-space:nowrap;color:#173b47}
+.live-player-metrics span{font:500 10px system-ui;color:#65807d}
+.live-player-summary p{font:12px/1.65 system-ui;margin:0 0 10px;color:#54706d}
+.live-player-summary .btn-primary{display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin-top:4px;font-size:12px;text-decoration:none}
+@media(max-width:430px){.live-player-summary{padding:12px}.live-player-metrics{gap:6px}.live-player-metrics strong{font-size:17px}.live-player-summary h3{font-size:17px!important}}
