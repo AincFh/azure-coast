@@ -81,6 +81,11 @@ async def main():
 
                     await page.locator('#launchDrive').click()
                     await page.locator('#game canvas').wait_for(timeout=45000)
+                    # The real WebGL browser must fetch a local pinned Three.js
+                    # module; r170 ships single-file ESM, not three.core.js.
+                    assets=await page.evaluate("""() => performance.getEntriesByType('resource').map(x=>x.name)""")
+                    assert any('/vendor/three/three.module.js' in url for url in assets), assets[:35]
+                    assert not any('esm.sh/three' in url for url in assets), assets[:35]
                     await page.locator('#begin').click()
                     await page.locator('#audioOpen').click()
                     await page.locator('#audioPanel').wait_for(state='visible',timeout=10000)
