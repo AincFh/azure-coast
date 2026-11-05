@@ -269,7 +269,7 @@ test('all four energy stations are independently reachable, bill the shared wall
  assert.equal(money,560);
  assert.equal(state.purchases,4);
  assert.equal(nearestEnergyShop({x:Infinity,z:0}),null);
- assert.equal(refuelVehicle(state,money,'tide',at('market','foot')).reason,'on-foot');
+ assert.equal(refuelVehicle(state,money,'tide',at('market','foot')).reason,'distance');
 });
 
 test('station purchases reject wrong transport mode, moving vehicles and insufficient funds at distant locations',()=>{
