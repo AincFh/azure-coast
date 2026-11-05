@@ -40,11 +40,11 @@ async def main():
                 # This avoids two extra software-WebGL reloads at 1440px.
                 if width == 1440:
                     await context.add_init_script("""(() => {
-                      if (location.pathname === '/play.html' && !sessionStorage.getItem('azure-qa-funded')) {
+                      if (location.pathname === '/play.html' && !localStorage.getItem('azure-qa-funded')) {
                         const saved = JSON.parse(localStorage.getItem('azure-coast-driving-v2')||'{}');
                         saved.credits = 5000;
                         localStorage.setItem('azure-coast-driving-v2', JSON.stringify(saved));
-                        sessionStorage.setItem('azure-qa-funded','1');
+                        localStorage.setItem('azure-qa-funded','1');
                       }
                     })();""")
                 try:
@@ -117,8 +117,15 @@ async def main():
                     assert await page.locator('#navDestination').text_content() == '日落山崖'
                     await page.screenshot(path=str(OUT / f'{label}-map.png'), timeout=90000, animations='disabled')
                     await page.locator('#mapClose').click()
-                    await page.reload(wait_until='domcontentloaded')
-                    await page.locator('#game canvas').wait_for(timeout=45000)
+                    # Reopen in a fresh tab rather than reloading an active
+                    # software-WebGL canvas. Same browser context retains saves.
+                    await page.close()
+                    page = await context.new_page()
+                    page.on('pageerror', lambda err: page_errors.append(str(err)))
+                    page.on('console', lambda msg: shader_errors.append(msg.text)
+                            if msg.type == 'error' and ('WebGLProgram' in msg.text or 'shader' in msg.text.lower()) else None)
+                    await page.goto(BASE + '/play.html', wait_until='domcontentloaded', timeout=90000)
+                    await page.locator('#game canvas').wait_for(timeout=60000)
                     assert await page.locator('#navDestination').text_content() == '日落山崖', 'Journey was not restored'
                     assert await page.locator('#activityName').text_content() == '海岸运送', 'Contract was not restored'
                     if width == 1440:
