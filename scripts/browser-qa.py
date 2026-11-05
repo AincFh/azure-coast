@@ -236,6 +236,60 @@ async def main():
                         await page.goto(BASE + '/#homes', wait_until='domcontentloaded')
                         await page.reload(wait_until='domcontentloaded')
                         assert '已购入，存档已同步' in await page.locator('#view').inner_text()
+                    # Standalone save vault runs without WebGL and is usable
+                    # even when the player's device cannot initialize 3D.
+                    await page.goto(BASE + '/save.html#saves',wait_until='domcontentloaded',timeout=30000)
+                    await page.locator('#saveManagerPanel').wait_for(state='visible',timeout=12000)
+                    assert await page.locator('#saveImportApply').is_disabled()
+                    await check_no_horizontal_overflow(page, f'save vault {label}')
+                    await page.screenshot(path=str(OUT / f'{label}-save-vault.png'),timeout=25000,animations='disabled')
+                    if width == 1440:
+                        async with page.expect_download(timeout=30000) as download_wait:
+                            await page.locator('#saveExport').click()
+                        exported=await download_wait.value
+                        assert exported.suggested_filename.startswith('azure-coast-full-save-')
+                        # Create a valid alternate save without changing the
+                        # live wallet before the import transaction.
+                        candidate=await page.evaluate("""async () => {
+                          const {createSaveArchive}=await import('/save-archive.mjs');
+                          const key='azure-coast-driving-v2';
+                          const driving=JSON.parse(localStorage.getItem(key));
+                          driving.credits=76543;
+                          const alternate={getItem:k=>k===key?JSON.stringify(driving):localStorage.getItem(k)};
+                          return JSON.stringify(await createSaveArchive(alternate));
+                        }""")
+                        await page.locator('#saveImportFile').set_input_files({
+                          'name':'azure-coast-import-qa.json','mimeType':'application/json',
+                          'buffer':candidate.encode('utf-8')
+                        })
+                        await page.locator('#savePreview').wait_for(state='visible',timeout=12000)
+                        assert '$76,543' in await page.locator('#savePreviewWallet').inner_text()
+                        assert 'TIDE E' in await page.locator('#savePreviewCars').inner_text()
+                        assert await page.locator('#saveImportApply').is_disabled()
+                        await page.locator('#saveOverwriteConfirm').check()
+                        assert await page.locator('#saveImportApply').is_enabled()
+                        await page.locator('#saveImportApply').click()
+                        await page.wait_for_function("""() => {
+                          const raw=localStorage.getItem('azure-coast-driving-v2');
+                          return raw && JSON.parse(raw).credits===76543;
+                        }""",timeout=20000)
+                        await page.goto(BASE+'/save.html#saves',wait_until='domcontentloaded',timeout=30000)
+                        await page.locator('#saveManagerPanel').wait_for(state='visible')
+                        await page.locator('#saveUndoImport').wait_for(state='visible')
+                        assert await page.locator('#saveUndoImport').is_enabled(), 'Missing safe undo point'
+                        await page.locator('#saveUndoImport').click()
+                        await page.locator('#savePreview').wait_for(state='visible')
+                        assert '$33,000' in await page.locator('#savePreviewWallet').inner_text()
+                        await page.locator('#saveOverwriteConfirm').check()
+                        await page.locator('#saveImportApply').click()
+                        await page.wait_for_function("""() => {
+                          const raw=localStorage.getItem('azure-coast-driving-v2');
+                          return raw && JSON.parse(raw).credits===33000;
+                        }""",timeout=20000)
+                        restored=await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
+                        assert restored['fleet']['active']=='tide', 'Recovery lost active vehicle'
+                        assert 'coastal-starter' in restored['housing']['owned'], 'Recovery lost home'
+                        assert restored['garage']['engine']==1, 'Recovery lost upgrade'
                     assert not page_errors, f'Browser script errors at {label}: {page_errors}'
                     assert not shader_errors, f'WebGL shader errors at {label}: {shader_errors}'
                     print(f'PASS {label}px — six drivable vehicles, dealer purchases, jobs, garage, housing, traffic, shared wallet and reload')
