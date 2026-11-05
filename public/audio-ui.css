@@ -1,0 +1,33 @@
+/* AZURE COAST / tactile sound mixer with privacy-first local persistence */
+.audio-panel[hidden]{display:none!important}
+.audio-panel{position:fixed;inset:0;z-index:71;display:grid;place-items:center;padding:15px;background:rgba(3,14,23,.73);backdrop-filter:blur(12px);font:400 13px/1.6 system-ui,sans-serif;color:#f0f6f3}
+.audio-shell{width:min(590px,100%);max-height:calc(100dvh - 20px);overflow:auto;border:1px solid #d6ebd754;border-radius:20px;background:linear-gradient(155deg,#193a45,#0c2733 85%);box-shadow:0 25px 92px rgba(0,0,0,.55)}
+.audio-shell header{display:flex;justify-content:space-between;gap:14px;padding:24px 24px 18px;border-bottom:1px solid #ffffff2f}
+.audio-shell header small{color:#9dddc6;font:600 10px/1.5 system-ui;letter-spacing:2px}
+.audio-shell h2{margin:7px 0;font:600 26px/1.2 system-ui;color:#fff}
+.audio-shell header p{margin:0;font:12px/1.65 system-ui;color:#bad0d3}
+.audio-shell header button{background:#ffffff14;color:#f2f7f4;border:1px solid #e9f5ee67;min-height:39px;white-space:nowrap;border-radius:9px;margin:0;font:650 12px system-ui;padding:8px 11px;align-self:flex-start}
+.audio-content{padding:18px 24px 24px;display:grid;gap:16px}
+.audio-voice{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:9px}
+.audio-voice strong{font:630 15px system-ui;color:#dbece6}
+.audio-voice span{font:11px system-ui;color:#a8d9c8}
+.audio-checkbox{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid #c9e3d33c;background:#ffffff0d;border-radius:11px;cursor:pointer}
+.audio-checkbox input{width:19px;height:19px;accent-color:#a8e7cc;flex:none}
+.audio-checkbox span{font:600 13px system-ui}
+.audio-mixer{display:grid;grid-template-columns:1fr;gap:7px}
+.audio-mixer label{display:flex;justify-content:space-between;gap:12px;color:#e2f1eb;font:600 12px system-ui;margin-top:8px}
+.audio-mixer output{color:#f3d2a2;font-variant-numeric:tabular-nums}
+.audio-mixer input{width:100%;min-height:25px;margin:0;accent-color:#a1dec6;cursor:pointer}
+#audioTest{justify-self:start;min-height:42px;padding:10px 17px;margin:4px 0 0;background:#d6eedf;color:#164445;border:1px solid #d9f4e6;border-radius:10px;font:650 12px system-ui}
+.audio-note{margin:0;color:#a4c0c6;font:11px/1.7 system-ui}
+.audio-panel button:focus-visible,.audio-panel input:focus-visible{outline:3px solid #f0ce9c;outline-offset:2px}
+#audioOpen{font:650 10px system-ui;letter-spacing:normal;padding:7px 10px;margin:0;border-radius:9px;border:1px solid #c1e5d089;background:#e4f3e5;color:#174443;min-height:36px}
+@media(max-width:700px){
+ #audioOpen{font-size:10px;padding:7px 8px;min-height:33px}
+ .audio-shell header{padding:15px}
+ .audio-shell h2{font-size:21px}
+ .audio-shell header p{font-size:11px}
+ .audio-content{padding:14px;gap:12px}
+ .audio-voice strong{font-size:13px}
+}
+@media(max-height:480px){.audio-shell header{padding:10px}.audio-content{padding:10px}.audio-mixer{gap:4px}.audio-shell header p{display:none}}

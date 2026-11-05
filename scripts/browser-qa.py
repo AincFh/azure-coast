@@ -82,6 +82,21 @@ async def main():
                     await page.locator('#launchDrive').click()
                     await page.locator('#game canvas').wait_for(timeout=45000)
                     await page.locator('#begin').click()
+                    await page.locator('#audioOpen').click()
+                    await page.locator('#audioPanel').wait_for(state='visible',timeout=10000)
+                    await page.locator('#audio-master').evaluate("""e => {
+                        e.value='36';e.dispatchEvent(new Event('input',{bubbles:true}));
+                    }""")
+                    assert '36%' in await page.locator('#audioValue-master').inner_text()
+                    await page.locator('#audioMute').check()
+                    saved_audio=await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2')).audio""")
+                    assert saved_audio['muted'] is True
+                    await page.locator('#audioMute').uncheck()
+                    await page.locator('#audioTest').click()
+                    await page.locator('#audioClose').click()
+                    saved_audio=await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2')).audio""")
+                    assert saved_audio['muted'] is False
+                    assert abs(saved_audio['master']-.36) < .00001
                     if width <= 850:
                         assert await page.locator('#actionMenuBtn').is_visible()
                         assert not await page.locator('#activityOpen').is_visible()
@@ -204,6 +219,7 @@ async def main():
                         assert restored_wallet['credits'] == 33000, 'Shared garage and housing debits were lost on reload'
                         assert restored_wallet['garage']['engine'] == 1, 'Engine upgrade was lost on reload'
                         assert restored_wallet['fleet']['active'] == 'tide', 'Selected car was lost on reload'
+                        assert abs(restored_wallet['audio']['master']-.36) < .00001, 'Audio mix was lost on reload'
                         assert 'tide' in restored_wallet['fleet']['owned']
                         assert 'coastal-starter' in restored_wallet['housing']['owned']
                         assert restored_wallet['housing']['rooms']['coastal-starter'][0]['slot'] == 5, 'Furniture location was lost on reload'
@@ -290,6 +306,7 @@ async def main():
                         assert restored['fleet']['active']=='tide', 'Recovery lost active vehicle'
                         assert 'coastal-starter' in restored['housing']['owned'], 'Recovery lost home'
                         assert restored['garage']['engine']==1, 'Recovery lost upgrade'
+                        assert abs(restored['audio']['master']-.36)<.00001, 'Recovery lost sound mix'
                     assert not page_errors, f'Browser script errors at {label}: {page_errors}'
                     assert not shader_errors, f'WebGL shader errors at {label}: {shader_errors}'
                     print(f'PASS {label}px — six drivable vehicles, dealer purchases, jobs, garage, housing, traffic, shared wallet and reload')
