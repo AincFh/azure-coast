@@ -60,9 +60,9 @@ export function createCitizen(id){
   id,name:NAMES[id%NAMES.length],profession:PROFESSIONS[(id*7)%PROFESSIONS.length],
   trait:TRAITS[(id*11)%TRAITS.length],district:districtOf(bx*100+50,bz*100+50),
   genderVariant:id%3,look:Math.floor(hash(id,29)*6),blockX:bx,blockZ:bz,
-  type:crossing?'crossing':'sidewalk',crossingAxis,side,
+  type:id===4?'greeter':crossing?'crossing':'sidewalk',crossingAxis,side,
   pathOffset:offset,distance:0,
-  x:crossing?crossPosition.x:path.x,z:crossing?crossPosition.z:path.z,
+  x:id===4?10:crossing?crossPosition.x:path.x,z:id===4?16:crossing?crossPosition.z:path.z,
   heading:crossing?crossingAxis==='x'?side>0?Math.PI/2:-Math.PI/2:side>0?0:Math.PI:path.heading,
   phase:crossing?'waiting':'walking',progress:0,wait:0,visible:true,walk:0,speed:0
  };
@@ -98,6 +98,7 @@ export function tickCitizens(previous,dt,seconds,{
   const present=!late||a.id%5===0||a.profession==='出租车司机';
   if(!present){a.visible=false;a.speed=0;a.walk=0;return a}
   a.visible=true;
+  if(a.type==='greeter'){a.phase='greeting';a.speed=0;a.walk=0;return a}
   const rush=(hour>=7&&hour<=9)||(hour>=17&&hour<=19);
   const pace=(.9+hash(a.id,8)*.65)*(rush?1.25:late?.72:1);
   const shelter=weather==='rain'&&a.id%6===1;
