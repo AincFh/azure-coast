@@ -1,0 +1,80 @@
+/* AZURE COAST / versioned save vault */
+.save-manager-panel[hidden],.save-preview[hidden]{display:none!important}
+.save-manager-panel{
+ position:fixed;inset:0;z-index:92;display:flex;align-items:center;justify-content:center;
+ padding:clamp(8px,2vw,30px);background:rgba(2,17,29,.80);
+ backdrop-filter:blur(16px);color:#f0f6f4;
+ font:400 13px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+.save-manager-shell{
+ display:flex;flex-direction:column;width:min(960px,100%);max-height:calc(100dvh - 18px);
+ overflow:hidden;border:1px solid rgba(210,236,224,.38);border-radius:24px;
+ background:linear-gradient(145deg,#173845 0%,#0b2432 80%);
+ box-shadow:0 32px 120px rgba(0,0,0,.58);
+}
+.save-manager-header{display:flex;justify-content:space-between;gap:16px;padding:24px 27px 19px;border-bottom:1px solid #ffffff26}
+.save-manager-header small{font-size:10px;letter-spacing:2px;color:#90dec8;font-weight:650}
+.save-manager-header h2{margin:7px 0 8px;font-size:clamp(22px,3vw,31px);font-weight:580;line-height:1.2;color:white}
+.save-manager-header p{margin:0;max-width:680px;font-size:12px;color:#b6d3d5}
+.save-manager-header button,.save-manager-action button,.save-recovery button,.save-preview button{
+ min-height:42px;margin:0;padding:10px 15px;border:1px solid #c5e0d78b;border-radius:10px;
+ background:#d2eddb;color:#193e43;font-size:12px;font-weight:680;white-space:normal;
+}
+.save-manager-header button{background:rgba(255,255,255,.1);color:#ecf7f1;flex:none;height:42px}
+.save-manager-content{padding:20px 27px;overflow-y:auto;min-height:0;display:grid;gap:14px}
+.save-manager-action{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px;border:1px solid #ffffff2b;border-radius:15px;background:rgba(255,255,255,.055)}
+.save-manager-action h3{margin:0 0 5px;font:640 18px/1.3 system-ui;color:white}
+.save-manager-action p{margin:0;max-width:570px;font:12px/1.6 system-ui;color:#b3cbd0}
+.save-file-label{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;min-height:43px;padding:9px 15px;border-radius:9px;color:#123e44;background:#c7e9dd;font:680 12px system-ui;white-space:nowrap}
+#saveImportFile{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+#saveImportFile:focus-visible+.save-source,.save-file-label:focus-within{outline:2px solid #f1cf9f}
+.save-source{font:11px/1.4 system-ui;color:#d0e4e1;max-width:180px;overflow-wrap:anywhere}
+.save-preview{display:grid;gap:12px;padding:18px;border:1px solid #a5dfb88c;border-radius:15px;background:rgba(145,212,183,.09)}
+.save-preview-heading{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.save-preview-heading strong{font:640 16px system-ui;color:#eaf9ef}
+.save-preview-heading span{font-size:11px;color:#b4d6ce}
+.save-preview-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.save-preview-grid>div{min-width:0;display:flex;flex-direction:column;gap:5px;border:1px solid #ffffff2e;border-radius:9px;padding:12px;background:rgba(255,255,255,.05)}
+.save-preview-grid small{font:10px system-ui;color:#a6cbca}
+.save-preview-grid strong{font:630 16px/1.35 system-ui;color:#f2d6a8;overflow-wrap:anywhere}
+.save-warning{display:flex;gap:10px;padding:13px;border:1px solid #f0cc918e;border-radius:10px;background:#ad69351b;color:#f3dfbd;font:12px/1.6 system-ui}
+.save-warning input{flex:none;width:18px;height:18px;accent-color:#8bdfbe;margin:1px 0 0}
+.save-preview button{justify-self:start}
+.save-manager-panel button:disabled{opacity:.38;cursor:not-allowed;filter:none}
+.save-recovery{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 18px;border:1px solid #ffffff24;border-radius:12px}
+.save-recovery strong{font:640 14px system-ui;color:#e2f3ee}
+.save-recovery p{margin:5px 0 0;color:#b1cbd0;font:11px/1.6 system-ui}
+.save-recovery button{background:#ffffff12;color:#eaf5ef;border-color:#ffffff46;flex:none}
+.save-status{margin:0;border-radius:9px;padding:11px 14px;background:#ffffff10;color:#cee2e1;font-size:12px}
+.save-status[data-kind="error"]{background:#cf65572b;color:#ffd4ca;border:1px solid #f3a59588}
+.save-status[data-kind="success"]{background:#8dd3aa25;color:#c4f1d7;border:1px solid #a9e5bc75}
+.save-manager-shell footer{padding:12px 27px;border-top:1px solid #ffffff27;color:#9dbcc1;font:11px/1.6 system-ui}
+.save-manager-panel button:focus-visible,.save-file-label:focus-visible{outline:3px solid #a5e5d1;outline-offset:3px}
+#saveManagerStart{background:#ffffff24;border:1px solid #ffffff50;color:#fff;margin:6px 0;min-height:40px}
+#saveManagerOpen{background:#d0e9de;color:#124144}
+@media(max-width:720px){
+ .save-manager-header{padding:16px;gap:7px}
+ .save-manager-header h2{font-size:21px}
+ .save-manager-header p{font-size:11px}
+ .save-manager-content{padding:12px;gap:9px}
+ .save-manager-action{flex-wrap:wrap;padding:12px;gap:9px}
+ .save-manager-action h3{font-size:16px}
+ .save-manager-action p{font-size:11px}
+ .save-preview{padding:12px}
+ .save-preview-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .save-preview-grid>div{padding:9px}
+ .save-preview-grid strong{font-size:14px}
+ .save-recovery{flex-wrap:wrap;gap:10px;padding:12px}
+ .save-manager-shell footer{padding:9px 12px;font-size:10px}
+ .save-source{max-width:calc(100vw - 50px)}
+}
+@media(max-height:480px){
+ .save-manager-shell{max-height:calc(100dvh - 6px)}
+ .save-manager-header{padding:8px 12px}
+ .save-manager-header h2{margin:2px 0;font-size:18px}
+ .save-manager-header p{display:none}
+ .save-manager-content{gap:6px}
+ .save-manager-action{padding:7px}
+ .save-manager-action p{display:none}
+}
+@media(prefers-reduced-motion:reduce){.save-manager-panel{transition:none}}
