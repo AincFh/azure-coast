@@ -1,0 +1,44 @@
+/* Azure Coast — interactive city services, composed with the driving HUD. */
+[hidden]{display:none!important}
+.activity-hud{margin-top:9px;padding-top:9px;border-top:1px solid rgba(156,226,218,.33);color:#e8f7f4}
+.activity-hud>small{display:block;color:#a6e1d8;letter-spacing:1.4px;font-size:10px}
+.activity-title{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-top:5px}
+.activity-title strong{font-size:17px!important;color:#f8d5a6}
+.activity-title span{font-size:12px;color:#d4f9ec;font-variant-numeric:tabular-nums}
+.activity-hud p{font-size:11px;color:#ddeff0;margin:5px 0 0}
+.activity-hud p:last-child{color:#98d7c9}
+.activity-prompt{position:fixed;z-index:14;bottom:168px;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 24px);padding:11px 20px;border:1px solid #f3dab173;border-radius:12px;background:rgba(13,29,38,.91);backdrop-filter:blur(18px);box-shadow:0 12px 50px #0008;color:#f8ddb2;font:600 13px/1.3 system-ui,sans-serif;pointer-events:none;text-align:center}
+.activity-panel{position:fixed;inset:0;z-index:40;display:grid;place-items:center;overflow:auto;padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));background:rgba(3,14,22,.84);backdrop-filter:blur(19px);color:#ecf4f5;font:400 14px/1.55 system-ui,sans-serif}
+.activity-shell{width:min(1020px,100%);max-height:min(820px,100%);overflow:hidden;min-height:0;display:flex;flex-direction:column;background:linear-gradient(140deg,#112b38,#0a1e2c 75%);border-radius:24px;border:1px solid #d2f4e342;box-shadow:0 32px 130px rgba(0,0,0,.6)}
+.activity-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:24px 27px 20px;border-bottom:1px solid #cee8e52c}
+.activity-header small{color:#85d8c5;letter-spacing:2px;font-size:10px}
+.activity-header h2{font-size:clamp(24px,3vw,36px);font-weight:570;margin:7px 0 5px;line-height:1.2;color:#fff}
+.activity-header p{margin:0;max-width:610px;color:#a9c6cd;font-size:12px}
+.activity-panel button{cursor:pointer;min-height:39px;border-radius:9px;transition:background .15s,border-color .15s}
+.activity-panel button:focus-visible{outline:2px solid #b0efda;outline-offset:3px}
+.activity-header button{background:#ffffff12;border:1px solid #ffffff42;color:#e9f3f2;padding:9px 14px;white-space:nowrap}
+.activity-panel-body{padding:25px 27px 20px;overflow:auto;min-height:0}
+.activity-offer-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.activity-offer{min-width:0;display:flex;flex-direction:column;gap:9px;border:1px solid #bed7d04a;border-radius:16px;background:linear-gradient(158deg,#ffffff15,#ffffff05 75%);padding:20px;min-height:250px}
+.activity-offer-head{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.activity-offer-head small{display:inline-block;font-size:10px;color:#a6d9d3;letter-spacing:1px}
+.activity-offer-head strong{color:#f3d4aa;font-size:17px;font-variant-numeric:tabular-nums}
+.activity-offer h3{margin:6px 0 0;color:#fff;font-weight:600;font-size:23px}
+.activity-offer p{color:#b5cdd0;line-height:1.7;font-size:12px;margin:0;flex:1}
+.activity-offer footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;border-top:1px solid #ffffff24;padding-top:12px}
+.activity-offer footer span{font-size:10px;color:#a4b9c0}
+.activity-offer button{padding:8px 13px;border:1px solid #b3e6d6;background:#c4efdc;color:#103637;font-weight:680;font-size:12px}
+.activity-offer button:hover{background:#efffec}
+.activity-offer button:disabled{opacity:.45;cursor:not-allowed}
+.activity-active-detail{padding:10px 14px;border:1px solid #eac78b66;border-radius:11px;color:#f6d9ab;background:#ac7c321d;margin:0 0 17px;font-size:12px}
+.activity-footer{border-top:1px solid #ffffff27;padding:16px 27px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.activity-footer span{color:#91b9bd;font-size:11px}
+.activity-footer button{padding:8px 14px;background:#ffffff0e;color:#f4d5c7;border:1px solid #e7ae9c55}
+.activity-footer button:hover,.activity-header button:hover{background:#ffffff25}
+#activityOpen{background:#d4edda;color:#123745;border:1px solid #def8e5;font-weight:700}
+body.activity-running .nav-status{top:248px}
+@media(max-width:900px){.activity-offer-list{grid-template-columns:1fr;gap:10px}.activity-offer{min-height:0;padding:14px;gap:6px}.activity-offer h3{font-size:20px}.activity-header{padding:17px}.activity-panel-body{padding:15px}.activity-footer{padding:13px 17px}.activity-shell{max-height:calc(100dvh - 24px)}}
+@media(max-width:850px){.activity-prompt{bottom:240px;padding:8px 14px;font-size:11px}.activity-hud{margin-top:6px}.activity-title strong{font-size:13px!important}.activity-title span{font-size:10px}.activity-hud p{font-size:10px}.activity-running .object{max-width:min(360px,calc(100vw - 16px))!important}.activity-panel-body{overflow:auto}.activity-offer{min-height:0}.activity-offer p{line-height:1.35}.activity-offer h3{margin:0}.activity-shell{border-radius:16px}.activity-header h2{font-size:23px}body.activity-running .nav-status{top:268px}}
+@media(max-width:450px){.activity-prompt{bottom:236px;font-size:10px}.activity-shell{max-height:calc(100dvh - 18px)}.activity-header{padding:12px}.activity-header h2{font-size:20px}.activity-header p{font-size:10px}.activity-offer{padding:12px}.activity-offer h3{font-size:17px}.activity-offer p{font-size:11px}.activity-offer footer span{font-size:9px}.activity-footer{flex-wrap:wrap;padding:10px}.activity-footer button{flex:1}.activity-offer-list{gap:7px}body.activity-running .nav-status{top:290px}#activityOpen{font-size:10px;padding:6px 8px}}
+@media(max-height:550px){.activity-prompt{bottom:94px}.activity-header p{display:none}.activity-header{padding:10px 15px}.activity-panel-body{padding:8px 15px}.activity-offer{min-height:0}}
+@media(prefers-reduced-motion:reduce){.activity-panel button{transition:none}}
