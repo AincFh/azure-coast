@@ -11,6 +11,7 @@ import {restoreSession} from './physics.mjs';
 import {restoreGarage} from './garage.mjs';
 import {restoreHousing} from './housing.mjs';
 import {restoreFleet} from './fleet.mjs';
+import {restoreAudioPreferences} from './audio-state.mjs';
 import {restoreActivities} from './activities.mjs';
 import {normalizeEnvironment} from './environment.mjs';
 import {restoreJourney,cleanStops} from './journey.mjs';
@@ -45,7 +46,7 @@ function normalizeRecord(key,value){
   case 'azure-coast-driving-v2':
    return {...sanitizeProgress(value,ROUTE.length),
     garage:restoreGarage(value.garage),housing:restoreHousing(value.housing),
-    fleet:restoreFleet(value.fleet)};
+    fleet:restoreFleet(value.fleet),audio:restoreAudioPreferences(value.audio)};
   case 'azure-coast-city-services-v1':return restoreActivities(value);
   case 'azure-coast-session-v3':{
    const session=restoreSession(value);
