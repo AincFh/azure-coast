@@ -44,7 +44,7 @@ function fakeEnvironment(){
    click:()=>handlers.click?.({target:node})};
   elements.set(id,node);return node;
  }
- ['actionDrawer','actionMenuBtn','actionClose','activityOpen','garageOpen','housingOpen','fleetOpen',
+ ['actionDrawer','actionMenuBtn','actionClose','activityOpen','garageOpen','housingOpen','fleetOpen','citizenOpen','livingOpen',
   'begin','pauseBtn','mapBtn','enterBtn','cameraBtn'].forEach(el);
  const body={classList:{
   contains:k=>classes.has(k),
@@ -71,7 +71,7 @@ test('drawer opens with ARIA feedback and closes on Escape',()=>{
 });
 test('every action choice dispatches its existing game button and dismisses drawer',()=>{
  const h=fakeEnvironment(),ui=setupMobileActionCenter(h.doc,h.win);
- for(const name of ['activityOpen','garageOpen','housingOpen','fleetOpen']){
+ for(const name of ['activityOpen','garageOpen','housingOpen','fleetOpen','citizenOpen','livingOpen']){
   let clicks=0;
   h.elements.get(name).addEventListener('click',()=>clicks++);
   ui.open();
