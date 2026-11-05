@@ -87,6 +87,11 @@ async def main():
                     assert any('/vendor/three/three.module.js' in url for url in assets), assets[:35]
                     assert not any('esm.sh/three' in url for url in assets), assets[:35]
                     await page.locator('#begin').click()
+                    # Energy is persisted in the existing account save; a new
+                    # garage starts full and cannot buy an unnecessary refill.
+                    await page.locator('#energyLevel').wait_for(state='attached',timeout=10000)
+                    assert (await page.locator('#energyLevel').inner_text()).strip() == '100%'
+                    assert await page.locator('#rechargeBtn').is_disabled()
                     await page.locator('#audioOpen').click()
                     await page.locator('#audioPanel').wait_for(state='visible',timeout=10000)
                     await page.locator('#audio-master').evaluate("""e => {
