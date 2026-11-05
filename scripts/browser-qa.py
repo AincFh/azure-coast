@@ -42,7 +42,7 @@ async def main():
                     await context.add_init_script("""(() => {
                       if (location.pathname === '/play.html' && !localStorage.getItem('azure-qa-funded')) {
                         const saved = JSON.parse(localStorage.getItem('azure-coast-driving-v2')||'{}');
-                        saved.credits = 5000;
+                        saved.credits = 20000;
                         localStorage.setItem('azure-coast-driving-v2', JSON.stringify(saved));
                         localStorage.setItem('azure-qa-funded','1');
                       }
@@ -108,9 +108,40 @@ async def main():
                     if width == 1440:
                         await page.locator('#garageOfferList [data-upgrade="engine"]').click()
                         wallet = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
-                        assert wallet['credits'] == 3200, 'Upgrade did not debit the driving wallet'
+                        assert wallet['credits'] == 18200, 'Upgrade did not debit the driving wallet'
                         assert wallet['garage']['engine'] == 1, 'Upgrade was not persisted atomically'
                     await page.locator('#garageClose').click()
+                    await page.locator('#housingOpen').click()
+                    await page.locator('#housingPanel').wait_for(state='visible', timeout=10000)
+                    assert await page.locator('#housingList .housing-card').count() == 4
+                    if width == 1440:
+                        await page.locator('#housingList [data-buy-house="coastal-starter"]').click()
+                        bought = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
+                        assert 'coastal-starter' in bought['housing']['owned']
+                        assert bought['credits'] == 10200, 'First home did not debit the existing wallet'
+                        await page.locator('#housingClose').click()
+                        await page.locator('#enterBtn').click()
+                        await page.locator('#housingOpen').click()
+                        await page.locator('#housingList [data-enter-house="coastal-starter"]').click()
+                        await page.wait_for_function("""() => document.body.classList.contains('home-interior')""", timeout=20000)
+                        assert await page.locator('#interiorHud').is_visible()
+                        await page.locator('#interiorDecorate').click()
+                        await page.locator('#furnishPanel').wait_for(state='visible', timeout=10000)
+                        await page.locator('#furnishSlots [data-furniture-slot="4"]').click()
+                        await page.locator('#furnishOffers [data-buy-furniture="sofa"]').click()
+                        await page.locator('#furnishRotate').click()
+                        await page.locator('[data-furniture-move="right"]').click()
+                        home = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
+                        assert home['credits'] == 9000, 'Furniture purchase did not debit wallet'
+                        assert home['housing']['rooms']['coastal-starter'][0]['slot'] == 5
+                        assert home['housing']['rooms']['coastal-starter'][0]['rotation'] == 1
+                        await page.locator('#furnishClose').click()
+                        await page.screenshot(path=str(OUT / f'{label}-interior.png'), timeout=90000, animations='disabled')
+                        await page.locator('#interiorExit').click()
+                        assert not await page.evaluate("""() => document.body.classList.contains('home-interior')""")
+                        await page.locator('#enterBtn').click()
+                    else:
+                        await page.locator('#housingClose').click()
                     await page.locator('#mapBtn').click()
                     await page.locator('#mapOverlay').wait_for(state='visible')
                     await page.locator('#mapStopList [data-stop-id="cliff"]').click()
@@ -130,8 +161,10 @@ async def main():
                     assert await page.locator('#activityName').text_content() == '海岸运送', 'Contract was not restored'
                     if width == 1440:
                         restored_wallet = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
-                        assert restored_wallet['credits'] == 3200, 'Garage debit was lost on reload'
+                        assert restored_wallet['credits'] == 9000, 'Shared garage and housing debits were lost on reload'
                         assert restored_wallet['garage']['engine'] == 1, 'Engine upgrade was lost on reload'
+                        assert 'coastal-starter' in restored_wallet['housing']['owned']
+                        assert restored_wallet['housing']['rooms']['coastal-starter'][0]['slot'] == 5, 'Furniture location was lost on reload'
                     await page.locator('#begin').click()
                     await page.locator('#environmentHour').evaluate("""e => {e.value='15';e.dispatchEvent(new Event('input',{bubbles:true}))}""")
                     await page.locator('#environmentWeather').evaluate("""e => {e.value='clear';e.dispatchEvent(new Event('change',{bubbles:true}))}""")
@@ -139,7 +172,7 @@ async def main():
                     await page.screenshot(path=str(OUT / f'{label}-drive.png'), timeout=90000, animations='disabled')
                     assert not page_errors, f'Browser script errors at {label}: {page_errors}'
                     assert not shader_errors, f'WebGL shader errors at {label}: {shader_errors}'
-                    print(f'PASS {label}px — home, planner, 3D game, contract dispatch, map, multi-save persistence')
+                    print(f'PASS {label}px — home, 3D driving, jobs, garage, housing interiors, furnishings, traffic, reload persistence')
                 except Exception:
                     try:
                         await page.screenshot(path=str(OUT / f'{label}-failure.png'), timeout=10000, animations='disabled')
