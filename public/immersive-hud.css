@@ -1,0 +1,198 @@
+/**
+ * AZURE COAST — mobile-first play HUD.
+ * Desktop keeps the complete driving instruments. Compact viewports prioritize
+ * the actual WebGL scene, while preserving every objective behind one control.
+ */
+#hudDetailsBtn{display:none!important}
+@media(max-width:850px){
+  .hud.object{
+    display:block;
+    top:108px!important;
+    left:10px!important;right:10px!important;width:auto!important;
+    max-width:calc(100vw - 20px)!important;
+    min-height:61px;
+    padding:10px 112px 10px 13px!important;
+    border:1px solid rgba(186,235,225,.30);
+    border-left:3px solid #eac58d;
+    border-radius:14px;
+    background:rgba(9,29,43,.88);
+    box-shadow:0 9px 28px rgba(0,0,0,.26);
+    backdrop-filter:blur(16px);
+    overflow:hidden;
+    z-index:9;
+  }
+  .hud.object>small{
+    color:#a7d6d3;
+    font:500 9px/1.35 system-ui,sans-serif;
+    letter-spacing:1px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .hud.object>strong{
+    display:block;
+    color:#fff;
+    font:600 13px/1.45 system-ui,sans-serif!important;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:100%;
+    overflow-wrap:normal;
+    margin-top:5px;
+  }
+  #hudDetailsBtn{
+    position:absolute;
+    right:9px;top:12px;
+    display:inline-flex!important;
+    align-items:center;justify-content:center;
+    min-width:83px;min-height:34px!important;
+    padding:6px 9px!important;
+    margin:0!important;
+    font:600 11px/1.25 system-ui,sans-serif;
+    color:#dfefed;
+    background:rgba(255,255,255,.11);
+    border:1px solid rgba(189,226,219,.30);
+    border-radius:9px;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  #hudDetailsBtn:hover,#hudDetailsBtn:focus-visible{
+    background:rgba(187,235,218,.18);
+    border-color:#9be2d3;
+  }
+  .hud.object .activity-hud{display:none!important}
+  body:not(.hud-details-open) .nav-status:not([hidden]){display:none!important}
+  body.hud-details-open .hud.object{
+    padding-right:13px!important;
+    max-height:min(240px,39dvh);
+    overflow:auto;
+    z-index:20;
+    box-shadow:0 14px 46px rgba(0,0,0,.45);
+    border-color:rgba(169,228,215,.58);
+  }
+  body.hud-details-open .hud.object>small{padding-right:105px}
+  body.hud-details-open .hud.object>strong{
+    white-space:normal;
+    max-width:calc(100% - 2px);
+    padding-right:90px;
+  }
+  body.hud-details-open .hud.object .activity-hud{
+    display:block!important;
+    margin-top:10px;
+    padding-top:9px;
+  }
+  body.hud-details-open .nav-status:not([hidden]){
+    display:block!important;
+    position:fixed;
+    left:10px!important;right:auto!important;
+    top:min(326px,calc(100dvh - 245px))!important;
+    width:min(338px,calc(100vw - 20px))!important;
+    max-height:200px;
+    overflow:auto;
+    border-color:rgba(159,225,210,.5);
+    z-index:19;
+    padding:11px 13px;
+    box-shadow:0 15px 45px rgba(0,0,0,.48);
+  }
+  /* The map remains one tap away; the always-on 220px minimap is too large
+     for actual third-person driving on mobile. */
+  .hud.map,.hud.map.expanded{
+    left:10px!important;bottom:max(140px,env(safe-area-inset-bottom))!important;
+    width:auto!important;min-width:92px;max-width:110px!important;
+    padding:5px 6px!important;
+    border-radius:11px;
+    background:rgba(8,30,43,.87);
+    z-index:5;
+  }
+  .hud.map canvas{display:none!important}
+  .hud.map p{
+    margin:0!important;
+    font-size:0!important;
+    line-height:1;
+    letter-spacing:normal;
+  }
+  .hud.map button{
+    display:inline-flex;
+    align-items:center;justify-content:center;
+    min-height:34px!important;
+    padding:5px 8px!important;
+    margin:0!important;
+    font-size:11px!important;
+    white-space:nowrap;
+    color:#e8fbf4;
+    background:rgba(159,221,206,.14);
+    border:1px solid rgba(173,233,219,.31);
+    border-radius:7px;
+  }
+  .hud.stats{
+    bottom:max(140px,env(safe-area-inset-bottom))!important;
+    right:10px!important;
+    width:118px!important;max-width:118px!important;
+    padding:8px 9px!important;
+    text-align:right;
+    background:rgba(8,30,43,.87);
+    border:1px solid rgba(186,235,225,.21);
+    border-radius:11px;
+    z-index:5;
+  }
+  .hud.stats strong{font:500 30px/1.05 system-ui,sans-serif!important}
+  .hud.stats small{font-size:9px}
+  .hud.stats .bar{width:93px!important;margin:7px 0 6px auto}
+  #gear{font-size:9px;white-space:nowrap}
+  .controls{
+    position:fixed;
+    left:10px!important;right:10px!important;
+    bottom:max(10px,env(safe-area-inset-bottom))!important;
+    transform:none!important;
+    width:calc(100vw - 20px)!important;
+    max-width:none!important;
+    display:flex;flex-wrap:nowrap;
+    justify-content:stretch;
+    gap:3px!important;
+    padding:5px!important;
+    border-radius:13px;
+    z-index:6;
+    background:rgba(8,29,42,.92);
+    border-color:rgba(170,213,211,.27);
+  }
+  .controls button{
+    flex:1 1 0;
+    width:0;min-width:0;
+    min-height:39px!important;
+    padding:8px 3px!important;
+    margin:0!important;
+    border-radius:8px;
+    font:600 10px/1.25 system-ui,sans-serif!important;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .controls>span{display:none!important}
+  .activity-prompt{
+    bottom:max(201px,env(safe-area-inset-bottom))!important;
+    font-size:11px;
+    max-width:calc(100vw - 30px);
+    padding:8px 12px;
+  }
+  .toast{top:30%!important;font-size:12px;z-index:25}
+}
+@media(max-width:850px) and (pointer:coarse){
+  .controls{bottom:max(71px,calc(61px + env(safe-area-inset-bottom)))!important}
+  .touch{left:10px!important;right:10px!important;bottom:max(9px,env(safe-area-inset-bottom))!important}
+  .touch button{min-width:44px!important;min-height:46px!important}
+  .hud.map,.hud.map.expanded,.hud.stats{bottom:max(145px,calc(135px + env(safe-area-inset-bottom)))!important}
+  .activity-prompt{bottom:max(218px,calc(205px + env(safe-area-inset-bottom)))!important}
+}
+@media(max-width:480px){
+  .hud.object{top:103px!important}
+  body.hud-details-open .nav-status:not([hidden]){top:min(318px,calc(100dvh - 232px))!important}
+}
+@media(max-width:850px) and (max-height:540px){
+  .hud.object{display:block!important;top:48px!important;left:10px!important;right:auto!important;max-width:min(310px,55vw)!important}
+  body.hud-details-open .nav-status:not([hidden]){top:123px!important;max-height:150px}
+  .hud.map,.hud.map.expanded,.hud.stats{bottom:70px!important}
+  .controls{bottom:8px!important;max-width:min(450px,70vw)!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .hud.object,.nav-status{transition:none!important}
+}

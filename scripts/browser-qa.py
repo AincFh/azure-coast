@@ -40,11 +40,11 @@ async def main():
                 # This avoids two extra software-WebGL reloads at 1440px.
                 if width == 1440:
                     await context.add_init_script("""(() => {
-                      if (location.pathname === '/play.html' && !sessionStorage.getItem('azure-qa-funded')) {
+                      if (location.pathname === '/play.html' && !localStorage.getItem('azure-qa-funded')) {
                         const saved = JSON.parse(localStorage.getItem('azure-coast-driving-v2')||'{}');
                         saved.credits = 5000;
                         localStorage.setItem('azure-coast-driving-v2', JSON.stringify(saved));
-                        sessionStorage.setItem('azure-qa-funded','1');
+                        localStorage.setItem('azure-qa-funded','1');
                       }
                     })();""")
                 try:
@@ -74,18 +74,30 @@ async def main():
                         const text=document.getElementById('trafficStatus')?.textContent||'';
                         return text.startsWith('交通 ') && text.includes('/45') && text.includes('km/h');
                     }""", timeout=20000)
-                    await page.locator('#navDestination').wait_for(state='visible', timeout=10000)
-                    assert await page.locator('#navDestination').inner_text() == '海湾中心'
+                    await page.locator('#navDestination').wait_for(state='attached', timeout=10000)
+                    assert await page.locator('#navDestination').text_content() == '海湾中心'
                     assert '雨天' in await page.locator('#environmentLabel').inner_text()
                     await page.locator('#activityOpen').click()
                     await page.locator('#activityPanel').wait_for(state='visible', timeout=10000)
                     assert await page.locator('#activityOfferList [data-activity-id]').count() == 3
                     await page.locator('#activityOfferList [data-activity-id="courier"]').click()
-                    await page.locator('#activityName').wait_for(state='visible', timeout=10000)
-                    assert await page.locator('#activityName').inner_text() == '海岸运送'
+                    await page.locator('#activityName').wait_for(state='attached', timeout=10000)
+                    assert await page.locator('#activityName').text_content() == '海岸运送'
                     assert '海湾收件点' in await page.locator('#activityStage').inner_text()
                     state = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-city-services-v1'))""")
                     assert state['id'] == 'courier' and state['index'] == 0
+                    if width <= 850:
+                        toggle = page.locator('#hudDetailsBtn')
+                        await toggle.wait_for(state='visible')
+                        assert await toggle.get_attribute('aria-expanded') == 'false'
+                        assert not await page.locator('#navStatus').is_visible(), 'Collapsed HUD still covers the 3D world'
+                        await toggle.click()
+                        assert await toggle.get_attribute('aria-expanded') == 'true'
+                        assert await page.locator('#navStatus').is_visible()
+                        assert await page.locator('#activityHud').is_visible()
+                        await page.screenshot(path=str(OUT / f'{label}-hud-expanded.png'), timeout=60000, animations='disabled')
+                        await toggle.click()
+                        assert not await page.locator('#navStatus').is_visible()
                     await page.locator('#activityOpen').click()
                     assert '海岸运送' in await page.locator('#activityActiveDetail').inner_text()
                     await page.locator('#activityClose').click()
@@ -102,13 +114,20 @@ async def main():
                     await page.locator('#mapBtn').click()
                     await page.locator('#mapOverlay').wait_for(state='visible')
                     await page.locator('#mapStopList [data-stop-id="cliff"]').click()
-                    assert await page.locator('#navDestination').inner_text() == '日落山崖'
+                    assert await page.locator('#navDestination').text_content() == '日落山崖'
                     await page.screenshot(path=str(OUT / f'{label}-map.png'), timeout=90000, animations='disabled')
                     await page.locator('#mapClose').click()
-                    await page.reload(wait_until='domcontentloaded')
-                    await page.locator('#game canvas').wait_for(timeout=45000)
-                    assert await page.locator('#navDestination').inner_text() == '日落山崖', 'Journey was not restored'
-                    assert await page.locator('#activityName').inner_text() == '海岸运送', 'Contract was not restored'
+                    # Reopen in a fresh tab rather than reloading an active
+                    # software-WebGL canvas. Same browser context retains saves.
+                    await page.close()
+                    page = await context.new_page()
+                    page.on('pageerror', lambda err: page_errors.append(str(err)))
+                    page.on('console', lambda msg: shader_errors.append(msg.text)
+                            if msg.type == 'error' and ('WebGLProgram' in msg.text or 'shader' in msg.text.lower()) else None)
+                    await page.goto(BASE + '/play.html', wait_until='domcontentloaded', timeout=90000)
+                    await page.locator('#game canvas').wait_for(timeout=60000)
+                    assert await page.locator('#navDestination').text_content() == '日落山崖', 'Journey was not restored'
+                    assert await page.locator('#activityName').text_content() == '海岸运送', 'Contract was not restored'
                     if width == 1440:
                         restored_wallet = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
                         assert restored_wallet['credits'] == 3200, 'Garage debit was lost on reload'
