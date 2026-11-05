@@ -10,3 +10,11 @@
 .environment-controls{position:fixed;top:112px;right:18px;z-index:12;display:grid;gap:8px;width:min(248px,calc(100vw - 36px));padding:14px;border:1px solid rgba(255,255,255,.2);border-radius:16px;background:rgba(12,30,44,.82);backdrop-filter:blur(18px);color:#f6fafb;font:500 12px/1.4 system-ui,sans-serif;box-sizing:border-box}
 .environment-controls label{display:flex;justify-content:space-between;gap:8px;align-items:center}.environment-controls output{color:#a8e9ed}.environment-controls input{width:100%;accent-color:#7bd7e2}.environment-controls select{width:100%;padding:8px;border:1px solid #557080;border-radius:8px;background:#142c3b;color:#fff}
 @media(max-width:700px){.environment-controls{top:72px;right:8px;width:164px;padding:10px;gap:5px;font-size:11px}.environment-controls label{flex-wrap:wrap}.environment-controls select{padding:5px}}
+
+/* Roadside energy is part of the driving HUD, with visible low-charge feedback. */
+#energyLevel{font-variant-numeric:tabular-nums;color:#b8f5e5;transition:color .2s ease}
+#energyLevel[data-low="true"]{color:#ffd198}
+#rechargeBtn:not(:disabled){color:#071f29;background:#a0e9da;border-color:#b9faed;font-weight:700}
+#rechargeBtn:not(:disabled):hover{background:#d0fff5}
+#rechargeBtn:disabled{opacity:.48;cursor:not-allowed}
+@media(prefers-reduced-motion:reduce){#energyLevel{transition:none}}
