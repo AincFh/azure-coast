@@ -83,7 +83,7 @@ async def main():
                     await page.locator('#game canvas').wait_for(timeout=45000)
                     assets=await page.evaluate("""() => performance.getEntriesByType('resource').map(x=>x.name)""")
                     assert any('/vendor/three/three.module.js' in url for url in assets), assets[:35]
-                    assert any('/vendor/three/three.core.js' in url for url in assets), assets[:35]
+                    # Three r170 is a single-file module; later versions may split core.
                     assert not any('esm.sh/three' in url for url in assets), assets[:35]
                     await page.locator('#begin').click()
                     await page.locator('#audioOpen').click()
