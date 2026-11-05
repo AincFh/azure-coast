@@ -138,5 +138,5 @@ export function setupLivingUI({
  }
  renderHud();update(0);
  return {open:()=>toggle(true),close:()=>toggle(false),isOpen:()=>opened,
-  interact:()=>toggle(true),access:()=>!!nearby(),update,use};
+  interact:()=>toggle(true),access:()=>{const p=nearby();return !!p&&shopAccess(p.id,getPlayer()).allowed},update,use};
 }
