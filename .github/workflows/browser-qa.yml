@@ -10,8 +10,15 @@ permissions:
   contents: read
 jobs:
   browser:
+    name: Chromium ${{ matrix.viewport }}px
+    strategy:
+      fail-fast: false
+      matrix:
+        viewport: ["375", "768", "1024", "1440"]
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      AZURE_QA_VIEWPORT: ${{ matrix.viewport }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,7 +46,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: azure-browser-qa
+          name: azure-browser-qa-${{ matrix.viewport }}
           path: artifacts/browser-qa/
           if-no-files-found: ignore
           retention-days: 7

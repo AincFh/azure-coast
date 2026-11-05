@@ -1,0 +1,33 @@
+/* AZURE Motor Works — cohesive with City Services, no second fake storefront. */
+.garage-shell{width:min(890px,100%);max-height:min(780px,100%)}
+.garage-summary{display:grid;grid-template-columns:minmax(0,210px) minmax(0,1fr);gap:18px;border-bottom:1px solid #ffffff25;padding:17px 27px;background:#a5c8bc09}
+.garage-summary>div{display:flex;flex-direction:column;justify-content:center;gap:6px}
+.garage-summary small{color:#9bc1be;font-size:11px;letter-spacing:1px}
+.garage-summary strong{color:#f0d5ab;font-size:28px;font-variant-numeric:tabular-nums;font-weight:650}
+.garage-summary span{font-size:12px;color:#e4f2ef}
+.garage-access{font-size:12px;color:#aee7d7;background:rgba(104,192,175,.12);border:1px solid rgba(174,231,215,.29);padding:11px 15px;margin:14px 27px 0;border-radius:10px}
+.garage-offer-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;overflow:auto;padding:16px 27px 23px}
+.garage-upgrade{min-height:208px;padding:16px;display:flex;flex-direction:column;gap:16px;background:linear-gradient(155deg,#ffffff16,#ffffff06);border:1px solid #d4e5d43d;border-radius:16px}
+.garage-upgrade header{display:flex;align-items:start;justify-content:space-between;gap:7px}
+.garage-upgrade header>div{display:flex;flex-direction:column-reverse;gap:6px}
+.garage-upgrade header small{font-size:10px;color:#a7c7c9;line-height:1.4}
+.garage-upgrade header strong{font-size:17px;color:#fff}
+.garage-upgrade header>span{font-size:10px;font-weight:650;color:#f2d0a0;border:1px solid #c9ae8888;border-radius:7px;padding:3px 7px;white-space:nowrap}
+.garage-level{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.garage-level i{height:5px;border-radius:6px;background:#ffffff2f}
+.garage-level i.is-installed{background:#93ead4}
+.garage-upgrade button{background:#c0e9db;color:#15383c;border:1px solid #d6f1e1;font-size:12px;font-weight:650;margin-top:auto;padding:9px}
+.garage-upgrade button:disabled{opacity:.45;cursor:not-allowed}
+.garage-finish{grid-column:1/-1;margin-top:2px;border-top:1px solid #ffffff29;padding-top:18px}
+.garage-finish h3{font-size:15px;color:#e9f6f1;margin:0 0 13px;font-weight:600}
+.garage-swatches{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.garage-swatches button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:13px 6px;background:#ffffff11;color:#ecf7f2;border:1px solid #ffffff3e;border-radius:11px;min-height:110px}
+.garage-swatches button:not(:disabled):hover{background:#ffffff1b;border-color:#bdebd9}
+.garage-swatches button:disabled{cursor:not-allowed}
+.garage-swatches button:disabled:not([title]){opacity:.58}
+.garage-swatch{display:block;width:41px;height:41px;max-width:100%;border-radius:50%;background:var(--finish);box-shadow:inset 0 0 0 1px #ffffff44,0 4px 11px #0006}
+.garage-swatches button>span:nth-child(2){font-size:10px}
+.garage-swatches button small{font-size:10px;color:#edd2a7}
+#garageOpen{background:#f2e2c8;color:#44311e;border:1px solid #fff0d7;font-weight:680}
+@media(max-width:850px){.garage-summary{padding:13px 16px;gap:10px}.garage-summary strong{font-size:22px}.garage-offer-list{grid-template-columns:1fr;padding:12px 16px}.garage-upgrade{min-height:0;gap:10px}.garage-access{margin:9px 16px 0}.garage-finish{grid-column:1}.garage-swatches{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:450px){.garage-summary{grid-template-columns:1fr;gap:8px}.garage-summary strong{font-size:21px}.garage-summary span{font-size:10px}.garage-access{font-size:10px}.garage-offer-list{gap:7px}.garage-upgrade{padding:12px}.garage-swatches{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.garage-swatches button{min-height:95px;padding:7px 4px}.garage-swatch{width:34px;height:34px}#garageOpen{font-size:10px;padding:6px 8px}}
