@@ -82,5 +82,6 @@ export function createSportsCar(THREE){
   car.add(lamp);car.add(lamp.target);headlights.push(lamp);
  }
  return {car,headlights,wheels,
-  updateWheels:(distance)=>wheels.forEach(w=>w.rotation.x-=distance/.74)};
+  updateWheels:(distance)=>wheels.forEach(w=>w.rotation.x-=distance/.74),
+  setPaint:(hex)=>{if(Number.isInteger(hex)&&hex>=0&&hex<=0xffffff)paint.color.setHex(hex)}};
 }
