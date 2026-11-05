@@ -7,11 +7,12 @@ import {restoreHousing,RESIDENCES} from './housing.mjs';
 import {restoreActivities} from './activities.mjs';
 import {restoreFleet,fleetVehicle,STARTER_ID} from './fleet.mjs';
 import {restoreSocial,socialRank} from './citizens-core.mjs';
+import {restoreLiving,livingIndicators} from './living-core.mjs';
 export const GAME_PROFILE_KEY='azure-coast-driving-v2';
 export const GAME_ACTIVITY_KEY='azure-coast-city-services-v1';
 const safeBalance=n=>Number.isSafeInteger(n)&&n>=0?Math.min(n,1e9):0;
 export function summarizeGameProfile(raw,rawActivities){
- const garage=restoreGarage(raw?.garage),housing=restoreHousing(raw?.housing),fleet=restoreFleet(raw?.fleet),social=restoreSocial(raw?.citizens);
+ const garage=restoreGarage(raw?.garage),housing=restoreHousing(raw?.housing),fleet=restoreFleet(raw?.fleet),social=restoreSocial(raw?.citizens),living=restoreLiving(raw?.living);
  const careers=restoreActivities(rawActivities);
  const completed=Object.values(careers.completed).reduce((sum,n)=>sum+n,0);
  const owned=housing.owned.map(id=>RESIDENCES.find(p=>p.id===id)).filter(Boolean);
@@ -22,6 +23,8 @@ export function summarizeGameProfile(raw,rawActivities){
   propertyInvestment:housing.spent,
   acquaintances:social.met.length,socialRank:socialRank(social),
   conversations:social.conversations,
+  survival:livingIndicators(living,fleet.active),foodPurchases:living.purchases,
+  backpackItems:Object.values(living.inventory).reduce((n,v)=>n+v,0),
   vehicleCount:fleet.owned.length,vehicleOwnedIds:fleet.owned.filter(id=>id!==STARTER_ID),
   vehicleNames:fleet.owned.map(id=>fleetVehicle(id)?.name).filter(Boolean),
   currentVehicle:fleetVehicle(fleet.active)?.name||'COAST / GT',vehicleInvestment:fleet.spent,
