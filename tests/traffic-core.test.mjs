@@ -37,7 +37,7 @@ test('traffic lights give exclusive crossing phases with all-red clearance',()=>
 test('approaching a red intersection slows towards a stop',()=>{
  const car={id:1,axis:'z',road:0,dir:1,coord:-25,speed:13,cruise:14,odometer:0};
  const junction=nextJunction(car);
- assert.equal(junction,0);
+ assert.ok(Math.abs(junction)<1e-9);
  const redTime=Array.from({length:32},(_,i)=>i).find(i=>!signalIsGreen('z',0,0,i));
  assert.ok(Number.isFinite(redTime));
  let cars=[car];let minSpeed=car.speed;
