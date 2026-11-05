@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {visualHash,architectureStyle,streetPlan} from '../public/visual-world.mjs';
 import {coupeDimensions} from '../public/vehicle-art.mjs';
+import {surfaceNoise} from '../public/surface-materials.mjs';
+import {characterDimensions} from '../public/character-art.mjs';
 
 test('street visual plan is deterministic and does not block driving lanes',()=>{
  const a=streetPlan(),b=streetPlan();
@@ -39,4 +41,13 @@ test('procedural hashes are stable and always return normalized values',()=>{
   assert.ok(v>=0&&v<1);
   assert.equal(v,visualHash(i,i*13,42));
  }
+});
+
+test('procedural texture noise remains bounded and the pedestrian matches collision tuning',()=>{
+ for(let i=0;i<512;i++){
+  const v=surfaceNoise(i,i*37,19);assert.ok(Number.isFinite(v)&&v>=0&&v<1);
+  assert.equal(v,surfaceNoise(i,i*37,19));
+ }
+ assert.ok(characterDimensions.height>=3);
+ assert.equal(characterDimensions.collisionRadius,.7);
 });
