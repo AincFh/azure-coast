@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b2532">
+<meta name="description" content="AZURE COAST 游戏存档保险库。离线导出、SHA-256 完整性检查、导入和可恢复的本地游戏存档。">
+<title>AZURE COAST — 存档保险库</title>
+<link rel="stylesheet" href="/game-base.css">
+<link rel="stylesheet" href="/save-manager.css">
+<link rel="stylesheet" href="/save-portal.css">
+</head>
+<body class="save-portal">
+<header class="save-portal-nav">
+<a class="save-portal-brand" href="/"><span>AC</span><strong>AZURE / COAST</strong></a>
+<nav aria-label="导航"><a href="/">返回官网</a><a href="/play.html">进入 3D 城市</a></nav>
+</header>
+<main class="save-portal-main">
+<section class="save-portal-hero">
+<small>PLAYER DATA / OFFLINE-FIRST</small>
+<h1>每一段海岸故事，<em>都值得保存。</em></h1>
+<p>这里管理的不只是个人档案，还包括所有已购车辆、住宅、家具布置、职业收入、行程与游戏角色位置。导出备份完全离线，不需要登录、不上传服务器。</p>
+<div class="save-portal-actions"><button type="button" id="saveManagerStart">打开存档保险库</button><a href="/play.html">返回游戏</a></div>
+</section>
+<section class="save-portal-features" aria-label="存档能力">
+<article><span>01 / BACKUP</span><h2>七类数据</h2><p>完整打包玩家账户、城市职业、车辆、住宅及其他游戏状态。</p></article>
+<article><span>02 / VERIFY</span><h2>SHA-256 校验</h2><p>导入前检查文件内容是否受损，预览资金、资产和职业进度。</p></article>
+<article><span>03 / RECOVER</span><h2>失败回滚</h2><p>所有记录一并替换。写入失败恢复原进度，成功导入前留有恢复点。</p></article>
+</section>
+<p class="save-portal-footnote">本地存档不等于云同步。不同设备或浏览器之间转移进度，需要手动导出文件后导入。请妥善保管存档文件。</p>
+</main>
+<section id="saveManagerPanel" class="save-manager-panel" role="dialog" aria-modal="true" aria-labelledby="saveManagerTitle" hidden><div class="save-manager-shell"><header class="save-manager-header"><div><small>AZURE COAST / LOCAL SAVE VAULT</small><h2 id="saveManagerTitle">我的游戏存档</h2><p>完整备份账户、职业、房产、家具、车库、车辆收藏、地图行程与世界位置。文件保存在你的设备，不会上传服务器。</p></div><button type="button" id="saveManagerClose" aria-label="关闭存档管理">关闭 ✕</button></header><div class="save-manager-content"><div class="save-manager-action"><div><h3>导出完整备份</h3><p>生成含版本号和 SHA-256 校验值的离线 JSON。建议定期保存一份到安全位置。</p></div><button id="saveExport" type="button">导出完整游戏存档</button></div><div class="save-manager-action"><div><h3>导入并恢复</h3><p>先检查所有记录完整性，再展示资金和资产预览。导入会覆盖当前浏览器的游戏与官网个人档案。</p></div><label class="save-file-label" for="saveImportFile">选择备份 JSON</label><input id="saveImportFile" type="file" accept=".json,application/json"><span id="saveSourceLabel" class="save-source">未选择存档文件</span></div><div id="savePreview" class="save-preview" hidden><div class="save-preview-heading"><strong>存档内容预览</strong><span id="savePreviewDate">—</span></div><div class="save-preview-grid"><div><small>账户资金</small><strong id="savePreviewWallet">—</strong></div><div><small>房产及家具</small><strong id="savePreviewHomes">—</strong></div><div><small>车辆收藏</small><strong id="savePreviewCars">—</strong></div><div><small>完成职业委托</small><strong id="savePreviewJobs">—</strong></div></div><label class="save-warning"><input id="saveOverwriteConfirm" type="checkbox"><span>我已核对该存档，理解恢复会覆盖当前游戏进度，并已另行保存重要备份。</span></label><button id="saveImportApply" type="button" disabled>确认覆盖并导入</button></div><div class="save-recovery"><div><strong>上一份游戏进度</strong><p>每次成功导入前，会自动保留当前完整存档用于恢复。恢复操作也需要核对及确认。</p></div><button id="saveUndoImport" type="button" disabled>查看导入前备份</button></div><p id="saveStatus" class="save-status" role="status" aria-live="polite">所有存档仅在当前设备处理。</p></div><footer>本功能不会创建云端账户，也不会将本地文件上传。校验值仅用于检测文件损坏，不是防篡改签名。</footer></div></section>
+<script type="module" src="/save-manager.mjs"></script>
+</body>
+</html>
