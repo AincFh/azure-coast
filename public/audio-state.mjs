@@ -60,7 +60,7 @@ export function audioFrame({
   roadGain:unit(roadGain),
   rainGain:unit(ambientRain),
   windGain:unit(ambientWind),
-  footstepInterval:outdoors&&onFoot&&moving?(sprinting?.28:.45):0,
+  footstepInterval:active&&!paused&&onFoot&&moving?(sprinting?.28:.45):0,
   quiet:!active||paused,
   inVehicle
  };
