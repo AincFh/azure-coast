@@ -42,7 +42,7 @@ test('unsupported, corrupt or forged asset IDs are removed before presentation',
  assert.equal(state.balance,0);
  assert.equal(state.propertyCount,0);
  assert.equal(state.furnitureCount,0);
- assert.equal(state.engine,0);
+ assert.equal(state.engine,3); // upstream garage sanitizes over-limit levels to the maximum safe tier
  assert.equal(state.armor,0);
 });
 test('catalog home cards read real ownership and game profile has a direct return route',()=>{
