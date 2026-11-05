@@ -6,7 +6,7 @@
 import {FLEET_CATALOG,fleetVehicle,STARTER_ID} from './fleet.mjs';
 export const LIVING_VERSION=1;
 export const SHOPS=Object.freeze([
- Object.freeze({id:'cafe',name:'晨汐咖啡',kind:'food',x:18,z:26,radius:23,category:'餐饮 · 街角咖啡厅',
+ Object.freeze({id:'cafe',name:'晨汐咖啡',kind:'food',x:-14,z:22,radius:23,category:'餐饮 · 街角咖啡厅',
   description:'营业中的街边咖啡馆。购买热饮与餐点，为步行恢复精力。'}),
  Object.freeze({id:'market',name:'海岸便利店',kind:'food',x:-17,z:126,radius:19,category:'零售 · 社区商店',
   description:'城市日常补给，提供随身食物与饮料。'}),
@@ -102,7 +102,7 @@ export function advanceLiving(raw,dt,{distance=0,onFoot=false,moving=false,sprin
    t*(draining?-4.6:speedOnFoot?.46:1.45)-
    (hunger<10||hydration<10?t*.45:0),0,100);
  const fuel={...state.fuel};
- if(!onFoot&&items.size&&fleetVehicle(carId))fuel[carId]=clip(fuel[carId]-delta*.013,0,100);
+ if(!onFoot&&fleetVehicle(carId))fuel[carId]=clip(fuel[carId]-delta*.013,0,100);
  return {...state,hunger,hydration,stamina,fuel,metres:clip(state.metres+delta,0,1e8)};
 }
 export function buyLivingItem(raw,shopId,itemId,credits,player){
