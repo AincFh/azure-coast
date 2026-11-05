@@ -6,7 +6,7 @@ import {intersectsBuilding,nearbyObstacles} from '../public/physics.mjs';
 test('six districts and four energy stations map to unique, accessible game positions',()=>{
  assert.equal(CITY_STOPS.length,10);
  assert.equal(CITY_STOPS.filter(s=>s.id.startsWith('fuel-')).length,4);
- assert.equal(new Set(CITY_STOPS.map(x=>x.id)).size,6);
+ assert.equal(new Set(CITY_STOPS.map(x=>x.id)).size,10);
  for(const stop of CITY_STOPS){assert.ok(Number.isFinite(stop.x)&&Number.isFinite(stop.z));assert.equal(intersectsBuilding(stop.x,stop.z,2.3,nearbyObstacles(stop.x,stop.z)),false,stop.id)}
 });
 test('planner contract rejects invalid stops and removes duplicates',()=>{
