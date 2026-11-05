@@ -62,7 +62,7 @@ export function createCitizen(id){
   genderVariant:id%3,look:Math.floor(hash(id,29)*6),blockX:bx,blockZ:bz,
   type:id===4?'greeter':crossing?'crossing':'sidewalk',crossingAxis,side,
   pathOffset:offset,distance:0,
-  x:id===4?10:crossing?crossPosition.x:path.x,z:id===4?16:crossing?crossPosition.z:path.z,
+  x:id===4?11:crossing?crossPosition.x:path.x,z:id===4?14:crossing?crossPosition.z:path.z,
   heading:crossing?crossingAxis==='x'?side>0?Math.PI/2:-Math.PI/2:side>0?0:Math.PI:path.heading,
   phase:crossing?'waiting':'walking',progress:0,wait:0,visible:true,walk:0,speed:0
  };
