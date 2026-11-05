@@ -5,7 +5,7 @@ import {nearbyObstacles,intersectsBuilding} from '../public/physics.mjs';
 import {FLEET_CATALOG,STARTER_ID} from '../public/fleet.mjs';
 import {
  LIVING_VERSION,SHOPS,PRODUCTS,makeLiving,restoreLiving,
- lifeShop,lifeProduct,closestShop,shopAccess,canSprint,
+ lifeShop,lifeProduct,closestShop,nearestEnergyShop,shopAccess,canSprint,
  advanceLiving,buyLivingItem,consumeLivingItem,refuelVehicle,
  energyProduct,livingIndicators,inventoryCount
 } from '../public/living-core.mjs';
@@ -19,7 +19,8 @@ const at=(id,mode='foot',speed=0)=>{
 };
 
 test('physical shops are located inside the city and not inside building collisions',()=>{
- assert.equal(SHOPS.length,3);
+ assert.equal(SHOPS.length,6);
+ assert.equal(SHOPS.filter(s=>s.kind==='energy').length,4);
  assert.equal(new Set(SHOPS.map(x=>x.id)).size,3);
  for(const place of SHOPS){
   assert.ok(place.x>=-630&&place.x<=630&&place.z>=-630&&place.z<=630);
@@ -246,4 +247,36 @@ test('3D physical shops and live gameplay actually consume fuel and stamina and 
  for(const id of ['lifeVitals','lifeHunger','lifeWater','lifeStamina','lifeFuel',
   'livingOpen','livingPanel','livingOffers','livingInventory','livingFuelBuy','livingPrompt'])
   assert.match(html,new RegExp('id="'+id+'"'));
+});
+
+test('all four energy stations are independently reachable, bill the shared wallet and preserve individual tanks',()=>{
+ const sources=SHOPS.filter(s=>s.kind==='energy');
+ assert.deepEqual(sources.map(s=>s.id),['station','energy-marina','energy-center','energy-cliff']);
+ let state={...makeLiving(),fuel:{...makeLiving().fuel,tide:0,[STARTER_ID]:35}};
+ let money=1000;
+ for(const station of sources){
+  const driver=at(station.id,'vehicle',0);
+  assert.equal(nearestEnergyShop(driver.position).id,station.id);
+  assert.equal(shopAccess(station.id,driver).allowed,true);
+  const bought=refuelVehicle(state,money,'tide',driver);
+  assert.equal(bought.reason,null,station.id);
+  assert.equal(bought.cost,110);
+  assert.equal(bought.state.fuel[STARTER_ID],35);
+  assert.equal(bought.state.fuel.tide,Math.min(100,state.fuel.tide+25));
+  state=bought.state;money=bought.balance;
+ }
+ assert.equal(state.fuel.tide,100);
+ assert.equal(money,560);
+ assert.equal(state.purchases,4);
+ assert.equal(nearestEnergyShop({x:Infinity,z:0}),null);
+ assert.equal(refuelVehicle(state,money,'tide',at('market','foot')).reason,'on-foot');
+});
+
+test('station purchases reject wrong transport mode, moving vehicles and insufficient funds at distant locations',()=>{
+ const state={...makeLiving(),fuel:{...makeLiving().fuel,'azure-starter':20}};
+ for(const station of SHOPS.filter(s=>s.kind==='energy')){
+  assert.equal(refuelVehicle(state,999,STARTER_ID,at(station.id,'foot')).reason,'vehicle');
+  assert.equal(refuelVehicle(state,999,STARTER_ID,at(station.id,'vehicle',12)).reason,'moving');
+  assert.equal(refuelVehicle(state,20,STARTER_ID,at(station.id,'vehicle')).reason,'funds');
+ }
 });
