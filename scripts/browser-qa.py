@@ -170,6 +170,30 @@ async def main():
                     await page.locator('#environmentWeather').evaluate("""e => {e.value='clear';e.dispatchEvent(new Event('change',{bubbles:true}))}""")
                     await page.wait_for_timeout(450)
                     await page.screenshot(path=str(OUT / f'{label}-drive.png'), timeout=90000, animations='disabled')
+                    if width == 1440:
+                        # Verify that the actual game wallet, ownership and furniture
+                        # are visible on the public site's personal profile.
+                        await page.close()
+                        page = await context.new_page()
+                        page.on('pageerror', lambda err: page_errors.append(str(err)))
+                        await page.goto(BASE + '/#profile', wait_until='domcontentloaded', timeout=30000)
+                        await page.locator('.live-player-summary').wait_for(state='visible', timeout=15000)
+                        summary = await page.locator('.live-player-summary').inner_text()
+                        assert '9,000' in summary, 'Profile lost actual shared wallet'
+                        assert '海湾初始公寓' in summary, 'Profile lost starter property'
+                        assert '已购住宅' in summary and '已摆放家具' in summary
+                        await page.screenshot(path=str(OUT / f'{label}-profile.png'), timeout=25000, animations='disabled')
+                        # A catalog-listed house must show ownership rather than
+                        # a disconnected favorite button when owned in the game save.
+                        await page.evaluate("""() => {
+                          const save=JSON.parse(localStorage.getItem('azure-coast-driving-v2'));
+                          save.housing.owned.push('harbor-home');
+                          save.housing.rooms['harbor-home']=[];
+                          localStorage.setItem('azure-coast-driving-v2',JSON.stringify(save));
+                        }""")
+                        await page.goto(BASE + '/#homes', wait_until='domcontentloaded')
+                        await page.reload(wait_until='domcontentloaded')
+                        assert '已购入，存档已同步' in await page.locator('#view').inner_text()
                     assert not page_errors, f'Browser script errors at {label}: {page_errors}'
                     assert not shader_errors, f'WebGL shader errors at {label}: {shader_errors}'
                     print(f'PASS {label}px — home, 3D driving, jobs, garage, housing interiors, furnishings, traffic, reload persistence')
