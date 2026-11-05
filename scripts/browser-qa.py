@@ -58,6 +58,18 @@ async def main():
                     await page.locator('#navDestination').wait_for(state='visible', timeout=10000)
                     assert await page.locator('#navDestination').inner_text() == '海湾中心'
                     assert '雨天' in await page.locator('#environmentLabel').inner_text()
+                    await page.locator('#activityOpen').click()
+                    await page.locator('#activityPanel').wait_for(state='visible', timeout=10000)
+                    assert await page.locator('#activityOfferList [data-activity-id]').count() == 3
+                    await page.locator('#activityOfferList [data-activity-id="courier"]').click()
+                    await page.locator('#activityName').wait_for(state='visible', timeout=10000)
+                    assert await page.locator('#activityName').inner_text() == '海岸运送'
+                    assert '海湾收件点' in await page.locator('#activityStage').inner_text()
+                    state = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-city-services-v1'))""")
+                    assert state['id'] == 'courier' and state['index'] == 0
+                    await page.locator('#activityOpen').click()
+                    assert '海岸运送' in await page.locator('#activityActiveDetail').inner_text()
+                    await page.locator('#activityClose').click()
                     await page.locator('#mapBtn').click()
                     await page.locator('#mapOverlay').wait_for(state='visible')
                     await page.locator('#mapStopList [data-stop-id="cliff"]').click()
@@ -67,6 +79,7 @@ async def main():
                     await page.reload(wait_until='domcontentloaded')
                     await page.locator('#game canvas').wait_for(timeout=45000)
                     assert await page.locator('#navDestination').inner_text() == '日落山崖', 'Journey was not restored'
+                    assert await page.locator('#activityName').inner_text() == '海岸运送', 'Contract was not restored'
                     await page.locator('#begin').click()
                     await page.locator('#environmentHour').evaluate("""e => {e.value='15';e.dispatchEvent(new Event('input',{bubbles:true}))}""")
                     await page.locator('#environmentWeather').evaluate("""e => {e.value='clear';e.dispatchEvent(new Event('change',{bubbles:true}))}""")
@@ -74,7 +87,7 @@ async def main():
                     await page.screenshot(path=str(OUT / f'{label}-drive.png'), timeout=90000, animations='disabled')
                     assert not page_errors, f'Browser script errors at {label}: {page_errors}'
                     assert not shader_errors, f'WebGL shader errors at {label}: {shader_errors}'
-                    print(f'PASS {label}px — homepage, planner, engine, map selection, persistence')
+                    print(f'PASS {label}px — home, planner, 3D game, contract dispatch, map, multi-save persistence')
                 except Exception:
                     try:
                         await page.screenshot(path=str(OUT / f'{label}-failure.png'), timeout=10000, animations='disabled')
