@@ -21,6 +21,18 @@ async def check_no_horizontal_overflow(page, label):
     numbers = await page.evaluate('''() => ({width: innerWidth, scroll: document.documentElement.scrollWidth})''')
     assert numbers['scroll'] <= numbers['width'] + 2, f'{label}: horizontal overflow {numbers}'
 
+async def open_city_system(page, width, name):
+    """Exercise the real action sheet on phone/tablet; the full control on desktop."""
+    if width <= 850:
+        menu = page.locator('#actionMenuBtn')
+        await menu.click()
+        await page.locator('#actionDrawer').wait_for(state='visible', timeout=10000)
+        await page.locator(f'#actionDrawer [data-action-proxy="{name}"]').click()
+        assert await menu.get_attribute('aria-expanded') == 'false'
+        assert not await page.locator('#actionDrawer').is_visible()
+    else:
+        await page.locator('#' + name).click()
+
 async def main():
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(headless=True, args=[
@@ -70,6 +82,13 @@ async def main():
                     await page.locator('#launchDrive').click()
                     await page.locator('#game canvas').wait_for(timeout=45000)
                     await page.locator('#begin').click()
+                    if width <= 850:
+                        assert await page.locator('#actionMenuBtn').is_visible()
+                        assert not await page.locator('#activityOpen').is_visible()
+                        assert not await page.locator('#fleetOpen').is_visible()
+                        await page.locator('#actionMenuBtn').click()
+                        assert await page.locator('#actionDrawer [data-action-proxy]').count() == 4
+                        await page.locator('#actionClose').click()
                     await page.wait_for_function("""() => {
                         const text=document.getElementById('trafficStatus')?.textContent||'';
                         return text.startsWith('交通 ') && text.includes('/45') && text.includes('km/h');
@@ -77,7 +96,7 @@ async def main():
                     await page.locator('#navDestination').wait_for(state='attached', timeout=10000)
                     assert await page.locator('#navDestination').text_content() == '海湾中心'
                     assert '雨天' in await page.locator('#environmentLabel').inner_text()
-                    await page.locator('#activityOpen').click()
+                    await open_city_system(page, width, 'activityOpen')
                     await page.locator('#activityPanel').wait_for(state='visible', timeout=10000)
                     assert await page.locator('#activityOfferList [data-activity-id]').count() == 3
                     await page.locator('#activityOfferList [data-activity-id="courier"]').click()
@@ -98,10 +117,10 @@ async def main():
                         await page.screenshot(path=str(OUT / f'{label}-hud-expanded.png'), timeout=60000, animations='disabled')
                         await toggle.click()
                         assert not await page.locator('#navStatus').is_visible()
-                    await page.locator('#activityOpen').click()
+                    await open_city_system(page, width, 'activityOpen')
                     assert '海岸运送' in await page.locator('#activityActiveDetail').inner_text()
                     await page.locator('#activityClose').click()
-                    await page.locator('#garageOpen').click()
+                    await open_city_system(page, width, 'garageOpen')
                     await page.locator('#garagePanel').wait_for(state='visible', timeout=10000)
                     assert await page.locator('#garageOfferList .garage-upgrade').count() == 3
                     assert '可购买' in await page.locator('#garageAccess').inner_text()
@@ -111,7 +130,7 @@ async def main():
                         assert wallet['credits'] == 138200, 'Upgrade did not debit the driving wallet'
                         assert wallet['garage']['engine'] == 1, 'Upgrade was not persisted atomically'
                     await page.locator('#garageClose').click()
-                    await page.locator('#housingOpen').click()
+                    await open_city_system(page, width, 'housingOpen')
                     await page.locator('#housingPanel').wait_for(state='visible', timeout=10000)
                     assert await page.locator('#housingList .housing-card').count() == 4
                     if width == 1440:
@@ -121,7 +140,7 @@ async def main():
                         assert bought['credits'] == 130200, 'First home did not debit the existing wallet'
                         await page.locator('#housingClose').click()
                         await page.locator('#enterBtn').click()
-                        await page.locator('#housingOpen').click()
+                        await open_city_system(page, width, 'housingOpen')
                         await page.locator('#housingList [data-enter-house="coastal-starter"]').click()
                         await page.wait_for_function("""() => document.body.classList.contains('home-interior')""", timeout=20000)
                         assert await page.locator('#interiorHud').is_visible()
@@ -142,7 +161,7 @@ async def main():
                         await page.locator('#enterBtn').click()
                         # Purchase a catalogue vehicle, really replace the live
                         # 3D car model, then verify the existing wallet changes.
-                        await page.locator('#fleetOpen').click()
+                        await open_city_system(page, width, 'fleetOpen')
                         await page.locator('#fleetPanel').wait_for(state='visible', timeout=15000)
                         assert await page.locator('#fleetVehicleList .fleet-card').count() == 7
                         await page.locator('#fleetVehicleList [data-fleet-preview="tide"]').click()
@@ -159,7 +178,7 @@ async def main():
                         await page.locator('#fleetClose').click()
                     else:
                         await page.locator('#housingClose').click()
-                        await page.locator('#fleetOpen').click()
+                        await open_city_system(page, width, 'fleetOpen')
                         await page.locator('#fleetPanel').wait_for(state='visible', timeout=12000)
                         assert await page.locator('#fleetVehicleList .fleet-card').count() == 7
                         await page.locator('#fleetClose').click()
