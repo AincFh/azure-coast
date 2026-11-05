@@ -36,7 +36,7 @@ export function qualityProfile({mode='auto',tier='high',width=1440,height=900,
  const device=Number.isFinite(dpr)&&dpr>0?Math.min(4,dpr):1;
  // Headless software WebGL must remain deterministic and avoid expensive
  // shadow-map shader compilation. It does not represent end-user hardware.
- const pixelRatio=software?.7:Math.max(.55,Math.min(device,p.dprCap,
+ const pixelRatio=software ? .7 :Math.max(.55,Math.min(device,p.dprCap,
   Math.sqrt(p.pixelBudget/(w*h))));
  return {tier:actual,pixelRatio,shadows:!software&&p.shadows,
   shadowSize:p.shadowSize,width:w,height:h,software:!!software};
@@ -53,7 +53,7 @@ export function createFrameGovernor({initial='high',software=false,cooldownMs=15
  let tier=QUALITY_TIERS.includes(initial)?initial:'balanced';
  let lastTime=null,lastAdjust=-Infinity;
  const samples=[];
- function sample(now,active=true){
+ function sample(now,active=true,allowAdjust=true){
   if(!active||software||!Number.isFinite(now)){
    lastTime=null;samples.length=0;return {tier,changed:false,avg:0};
   }
@@ -62,7 +62,7 @@ export function createFrameGovernor({initial='high',software=false,cooldownMs=15
   if(dt<=0||dt>350){samples.length=0;return {tier,changed:false,avg:0}}
   samples.push(dt);if(samples.length>72)samples.shift();
   const avg=samples.reduce((a,b)=>a+b,0)/samples.length;
-  if(samples.length<36||now-lastAdjust<cooldownMs)
+  if(!allowAdjust||samples.length<36||now-lastAdjust<cooldownMs)
    return {tier,changed:false,avg};
   const index=QUALITY_TIERS.indexOf(tier);
   let next=index;
@@ -121,7 +121,7 @@ export function createRenderQualityController({
   prefs={...prefs,showStats:value===true};save();
  }
  function presented(now,active=true){
-  const result=governor.sample(now,active&&prefs.mode==='auto');
+  const result=governor.sample(now,active,prefs.mode==='auto');
   if(result.changed)apply();
   return result;
  }
