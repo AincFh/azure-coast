@@ -9,6 +9,7 @@ function makeHarness(initial={}){
  const events=new Map();
  const nodes=new Map();
  const calls=[];
+ const assignments=new Map();
  const context={
   fillRect(){},clearRect(){},beginPath(){},moveTo(){},lineTo(){},stroke(){},arc(){},fill(){},save(){},restore(){},translate(){},rotate(){},closePath(){},fillText(){},setLineDash(){},createLinearGradient(){return {addColorStop(){}}}
  };
@@ -21,13 +22,13 @@ function makeHarness(initial={}){
    dispatch:(event,detail={})=>listeners[event]?.(detail),
    getBoundingClientRect:()=>({left:0,top:0,width:940,height:690}),
    getContext:()=>context
-  };nodes.set(id,n);return n;
+  };Object.defineProperty(n,'innerHTML',{get(){return n._html||''},set(value){n._html=value;assignments.set(id,(assignments.get(id)||0)+1)}});nodes.set(id,n);return n;
  }
  for(const id of ['mapOverlay','cityMap','navStatus','navDestination','navCue','navDistance','navProgress','mapJourneyState','mapLocation','mapStartJourney','mapStopList','mapClose','mapBtn','navMapBtn','mapCancelJourney'])node(id);
  const doc={getElementById:id=>nodes.get(id),defaultView:{devicePixelRatio:1,addEventListener:(event,cb)=>events.set(event,cb)}};
  let position={x:0,z:12};const paused=[];
  const ui=setupJourneyUI({doc,storage,getPosition:()=>position,getHeading:()=>0,onMapOpen:v=>paused.push(v),notify:m=>calls.push(m)});
- return {nodes,storage,ui,calls,paused,setPosition:p=>{position=p},get:(id)=>nodes.get(id)};
+ return {nodes,storage,ui,calls,paused,assignments,setPosition:p=>{position=p},get:(id)=>nodes.get(id)};
 }
 test('planned journey restores into navigation HUD without mutating mission progression',()=>{
  const h=makeHarness({[JOURNEY_KEY]:JSON.stringify(createJourney(['bay','marina']))});
@@ -68,4 +69,12 @@ test('explore itinerary can start from map and cancelling hides navigation',()=>
  assert.equal(h.ui.currentTarget(),null);
  assert.equal(h.get('navStatus').hidden,true);
  assert.equal(JSON.parse(h.storage.getItem(JOURNEY_KEY)).status,'cancelled');
+});
+
+test('live HUD updates do not continuously replace interactive map buttons',()=>{
+ const h=makeHarness({[JOURNEY_KEY]:JSON.stringify(createJourney(['bay','marina']))});
+ h.ui.toggleMap();
+ const initial=h.assignments.get('mapStopList');
+ for(let i=1;i<20;i++)h.ui.update(i*200,false);
+ assert.equal(h.assignments.get('mapStopList'),initial);
 });
