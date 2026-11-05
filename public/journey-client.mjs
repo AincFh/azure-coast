@@ -9,7 +9,7 @@ export function setupJourneyUI({doc=document,storage=window.localStorage,getPosi
  const load=(key)=>{try{return JSON.parse(storage.getItem(key)||'null')}catch{return null}};
  const store=()=>{try{storage.setItem(JOURNEY_KEY,JSON.stringify(journey))}catch{}};
  const planned=()=>loadPlannedStops(load(PLANNER_KEY));
- let journey=restoreJourney(load(JOURNEY_KEY)),hits=[],open=false,lastUpdate=0;
+ let journey=restoreJourney(load(JOURNEY_KEY)),hits=[],open=false,lastUpdate=0,lastRenderedTarget=null;
  function updateUI(){
   const target=nextJourneyStop(journey),position=getPosition();
   nav.hidden=!target;
@@ -28,11 +28,15 @@ export function setupJourneyUI({doc=document,storage=window.localStorage,getPosi
   $('mapLocation').textContent=`X ${Math.round(position.x)} · Z ${Math.round(position.z)}`;
   $('mapStartJourney').disabled=!planned().length;
   $('mapStartJourney').textContent=planned().length?`开始规划路线 · ${planned().length} 站`:'暂无规划路线';
+  const targetKey=target?.id||'none';
+  if(lastRenderedTarget!==targetKey){
+  lastRenderedTarget=targetKey;
   $('mapStopList').innerHTML=CITY_STOPS.map(stop=>{
    const active=target?.id===stop.id;
    const distance=Math.round(distanceToStop(position,stop));
    return `<button type="button" data-stop-id="${stop.id}" class="${active?'active':''}" aria-label="导航到${stop.name}"><span class="map-stop-icon" style="--stop-color:${stop.accent}"></span><span><strong>${stop.name}</strong><small>${distance} m · 点击单点导航</small></span></button>`;
   }).join('');
+  }
  }
  function draw(){
   if(!open)return;
@@ -52,7 +56,7 @@ export function setupJourneyUI({doc=document,storage=window.localStorage,getPosi
  }
  function setMapOpen(value){
   open=!!value;map.hidden=!open;onMapOpen(open);
-  if(open){updateUI();draw();$('mapClose').focus()}
+  if(open){lastRenderedTarget=null;updateUI();draw();$('mapClose').focus()}
   else $('mapBtn').focus();
  }
  $('mapBtn').addEventListener('click',()=>setMapOpen(!open));
