@@ -67,6 +67,10 @@ async def main():
                     await page.reload(wait_until='domcontentloaded')
                     await page.locator('#game canvas').wait_for(timeout=45000)
                     assert await page.locator('#navDestination').inner_text() == '日落山崖', 'Journey was not restored'
+                    await page.locator('#begin').click()
+                    await page.locator('#environmentHour').evaluate("""e => {e.value='15';e.dispatchEvent(new Event('input',{bubbles:true}))}""")
+                    await page.locator('#environmentWeather').select_option('clear')
+                    await page.wait_for_timeout(450)
                     await page.screenshot(path=str(OUT / f'{label}-drive.png'), timeout=90000, animations='disabled')
                     assert not page_errors, f'Browser script errors at {label}: {page_errors}'
                     assert not shader_errors, f'WebGL shader errors at {label}: {shader_errors}'
