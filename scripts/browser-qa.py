@@ -50,15 +50,15 @@ async def main():
                 label = str(width)
                 # Fund the test wallet BEFORE the first 3D page initializes.
                 # This avoids two extra software-WebGL reloads at 1440px.
-                if width == 1440:
-                    await context.add_init_script("""(() => {
-                      if (location.pathname === '/play.html' && !localStorage.getItem('azure-qa-funded')) {
-                        const saved = JSON.parse(localStorage.getItem('azure-coast-driving-v2')||'{}');
-                        saved.credits = 140000;
-                        localStorage.setItem('azure-coast-driving-v2', JSON.stringify(saved));
-                        localStorage.setItem('azure-qa-funded','1');
-                      }
-                    })();""")
+                seed = 140000 if width == 1440 else 500
+                await context.add_init_script("""(() => {
+                  if (location.pathname === '/play.html' && !localStorage.getItem('azure-qa-funded')) {
+                    const saved = JSON.parse(localStorage.getItem('azure-coast-driving-v2')||'{}');
+                    saved.credits = __SEED__;
+                    localStorage.setItem('azure-coast-driving-v2', JSON.stringify(saved));
+                    localStorage.setItem('azure-qa-funded','1');
+                  }
+                })();""".replace('__SEED__',str(seed)))
                 try:
                     await page.goto(BASE + '/', wait_until='domcontentloaded')
                     await page.locator('#view').wait_for(timeout=10000)
@@ -121,6 +121,26 @@ async def main():
                     assert '关系 2/3' in await page.locator('#citizenTrait').inner_text()
                     await page.screenshot(path=str(OUT / f'{label}-conversation.png'),timeout=25000,animations='disabled')
                     await page.locator('#citizenClose').click()
+                    # Walk-up cafe really exists by the starting sidewalk.
+                    # Food purchase debits the same game wallet; consumption
+                    # changes vital signs and removes one physical inventory item.
+                    await open_city_system(page, width, 'livingOpen')
+                    await page.locator('#livingPanel').wait_for(state='visible',timeout=10000)
+                    assert '晨汐咖啡' in await page.locator('#livingStoreName').inner_text()
+                    await page.locator('#livingOffers [data-life-buy="sandwich"]').wait_for(state='visible')
+                    before_life=await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
+                    await page.locator('#livingOffers [data-life-buy="sandwich"]').click()
+                    after_food=await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
+                    assert after_food['credits'] == before_life['credits']-95, 'Cafe purchase bypassed original wallet'
+                    assert after_food['living']['inventory']['sandwich'] == 1, 'Product not placed in shared inventory'
+                    await page.locator('#livingInventory [data-life-use="sandwich"]').click()
+                    after_eating=await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
+                    assert not after_eating['living']['inventory'].get('sandwich'), 'Consumed food remained in bag'
+                    assert after_eating['living']['hunger']>after_food['living']['hunger'], 'Real hunger was not restored'
+                    assert '饱腹' in await page.locator('#livingVitalStats').inner_text()
+                    await page.screenshot(path=str(OUT / f'{label}-living-market.png'),timeout=25000,animations='disabled')
+                    await page.locator('#livingClose').click()
+                    assert await page.locator('#lifeVitals').is_visible()
                     await page.locator('#enterBtn').click()
                     await page.wait_for_function("""() => document.getElementById('mode')?.textContent?.includes('车辆驾驶')""",timeout=10000)
                     if width <= 850:
@@ -128,7 +148,7 @@ async def main():
                         assert not await page.locator('#activityOpen').is_visible()
                         assert not await page.locator('#fleetOpen').is_visible()
                         await page.locator('#actionMenuBtn').click()
-                        assert await page.locator('#actionDrawer [data-action-proxy]').count() == 5
+                        assert await page.locator('#actionDrawer [data-action-proxy]').count() == 6
                         await page.locator('#actionClose').click()
                     await page.wait_for_function("""() => {
                         const text=document.getElementById('trafficStatus')?.textContent||'';
@@ -168,7 +188,7 @@ async def main():
                     if width == 1440:
                         await page.locator('#garageOfferList [data-upgrade="engine"]').click()
                         wallet = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
-                        assert wallet['credits'] == 138200, 'Upgrade did not debit the driving wallet'
+                        assert wallet['credits'] == 138105, 'Upgrade did not debit the driving wallet'
                         assert wallet['garage']['engine'] == 1, 'Upgrade was not persisted atomically'
                     await page.locator('#garageClose').click()
                     await open_city_system(page, width, 'housingOpen')
@@ -178,7 +198,7 @@ async def main():
                         await page.locator('#housingList [data-buy-house="coastal-starter"]').click()
                         bought = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
                         assert 'coastal-starter' in bought['housing']['owned']
-                        assert bought['credits'] == 130200, 'First home did not debit the existing wallet'
+                        assert bought['credits'] == 130105, 'First home did not debit the existing wallet'
                         await page.locator('#housingClose').click()
                         await page.locator('#enterBtn').click()
                         await open_city_system(page, width, 'housingOpen')
@@ -192,7 +212,7 @@ async def main():
                         await page.locator('#furnishRotate').click()
                         await page.locator('[data-furniture-move="right"]').click()
                         home = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
-                        assert home['credits'] == 129000, 'Furniture purchase did not debit wallet'
+                        assert home['credits'] == 128905, 'Furniture purchase did not debit wallet'
                         assert home['housing']['rooms']['coastal-starter'][0]['slot'] == 5
                         assert home['housing']['rooms']['coastal-starter'][0]['rotation'] == 1
                         await page.locator('#furnishClose').click()
@@ -209,7 +229,7 @@ async def main():
                         assert 'TIDE E' in await page.locator('#fleetPreviewName').inner_text()
                         await page.locator('#fleetVehicleList [data-fleet-buy="tide"]').click()
                         after_buy = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
-                        assert after_buy['credits'] == 33000, 'Vehicle sale did not debit original wallet'
+                        assert after_buy['credits'] == 32905, 'Vehicle sale did not debit original wallet'
                         assert 'tide' in after_buy['fleet']['owned'], 'Purchased EV not in inventory'
                         await page.locator('#fleetVehicleList [data-fleet-drive="tide"]').click()
                         assert 'TIDE E' in await page.locator('#fleetActiveName').inner_text()
@@ -242,7 +262,7 @@ async def main():
                     assert await page.locator('#activityName').text_content() == '海岸运送', 'Contract was not restored'
                     if width == 1440:
                         restored_wallet = await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
-                        assert restored_wallet['credits'] == 33000, 'Shared garage and housing debits were lost on reload'
+                        assert restored_wallet['credits'] == 32905, 'Shared garage and housing debits were lost on reload'
                         assert restored_wallet['garage']['engine'] == 1, 'Engine upgrade was lost on reload'
                         assert restored_wallet['fleet']['active'] == 'tide', 'Selected car was lost on reload'
                         assert 4 in restored_wallet['citizens']['met'], 'Citizen friendship was lost on reload'
@@ -264,7 +284,7 @@ async def main():
                         await page.goto(BASE + '/#profile', wait_until='domcontentloaded', timeout=30000)
                         await page.locator('.live-player-summary').wait_for(state='visible', timeout=15000)
                         summary = await page.locator('.live-player-summary').inner_text()
-                        assert '33,000' in summary, 'Profile lost actual shared wallet'
+                        assert '32,905' in summary, 'Profile lost actual shared wallet'
                         assert '海湾初始公寓' in summary, 'Profile lost starter property'
                         assert '已购住宅' in summary and '已摆放家具' in summary and 'TIDE E' in summary and '已认识居民' in summary
                         await page.screenshot(path=str(OUT / f'{label}-profile.png'), timeout=25000, animations='disabled')
@@ -322,22 +342,23 @@ async def main():
                         assert await page.locator('#saveUndoImport').is_enabled(), 'Missing safe undo point'
                         await page.locator('#saveUndoImport').click()
                         await page.locator('#savePreview').wait_for(state='visible')
-                        assert '$33,000' in await page.locator('#savePreviewWallet').inner_text()
+                        assert '$32,905' in await page.locator('#savePreviewWallet').inner_text()
                         await page.locator('#saveOverwriteConfirm').check()
                         await page.locator('#saveImportApply').click()
                         await page.wait_for_function("""() => {
                           const raw=localStorage.getItem('azure-coast-driving-v2');
-                          return raw && JSON.parse(raw).credits===33000;
+                          return raw && JSON.parse(raw).credits===32905;
                         }""",timeout=20000)
                         restored=await page.evaluate("""() => JSON.parse(localStorage.getItem('azure-coast-driving-v2'))""")
                         assert restored['fleet']['active']=='tide', 'Recovery lost active vehicle'
                         assert 4 in restored['citizens']['met'], 'Recovery lost resident relationships'
+                        assert restored['living']['consumed']==1, 'Recovery lost real food consumption'
                         assert 'coastal-starter' in restored['housing']['owned'], 'Recovery lost home'
                         assert restored['garage']['engine']==1, 'Recovery lost upgrade'
                         assert abs(restored['audio']['master']-.36)<.00001, 'Recovery lost sound mix'
                     assert not page_errors, f'Browser script errors at {label}: {page_errors}'
                     assert not shader_errors, f'WebGL shader errors at {label}: {shader_errors}'
-                    print(f'PASS {label}px — living NPCs, real dialogue, fleet, housing, sound, career, backup and save restore')
+                    print(f'PASS {label}px — walk-up food shopping, inventory consumption, stamina and fuel HUD, living NPCs, housing and backup restore')
                 except Exception:
                     try:
                         await page.screenshot(path=str(OUT / f'{label}-failure.png'), timeout=10000, animations='disabled')
