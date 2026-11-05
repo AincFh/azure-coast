@@ -11,7 +11,8 @@ test('3D gameplay imports exact pinned local rendering runtime',()=>{
  assert.ok(code.includes("from './vendor/three/three.module.js'"));
  assert.ok(!code.includes('esm.sh/three'));
  assert.ok(existsSync(file('public/vendor/three/three.module.js')));
- assert.ok(existsSync(file('public/vendor/three/three.core.js')));
+ const source=readFileSync(file('public/vendor/three/three.module.js'),'utf8');
+ if(source.includes('./three.core.js'))assert.ok(existsSync(file('public/vendor/three/three.core.js')));
  assert.ok(existsSync(file('public/vendor/three/LICENSE')));
  assert.ok(statSync(file('public/vendor/three/three.module.js')).size>400000);
 });
@@ -19,7 +20,10 @@ test('our Node server returns local WebGL ESM and copyright license, not a CDN r
  const server=createServer();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  try{
   const url=`http://127.0.0.1:${server.address().port}`;
-  for(const path of ['/vendor/three/three.module.js','/vendor/three/three.core.js']){
+  const source=readFileSync(file('public/vendor/three/three.module.js'),'utf8');
+  const routes=['/vendor/three/three.module.js'];
+  if(source.includes('./three.core.js'))routes.push('/vendor/three/three.core.js');
+  for(const path of routes){
    const response=await fetch(url+path);
    assert.equal(response.status,200,path);
    assert.match(response.headers.get('content-type'),/text\/javascript/);
