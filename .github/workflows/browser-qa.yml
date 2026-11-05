@@ -1,0 +1,42 @@
+name: Browser Interaction QA
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Chromium and Playwright
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+      - name: Start application
+        run: |
+          PORT=18765 node server.mjs > /tmp/azure-coast-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:18765/api/health >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/azure-coast-server.log
+          exit 1
+      - name: Test browser navigation and 3D boot
+        run: python scripts/browser-qa.py
+      - name: Preserve screenshots and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: azure-browser-qa
+          path: artifacts/browser-qa/
+          if-no-files-found: ignore
+          retention-days: 7
