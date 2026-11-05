@@ -15,6 +15,9 @@ import {setupGarageUI} from './garage-client.mjs';
 import {createTrafficWorld} from './traffic-world.mjs';
 import {restoreHousing} from './housing.mjs';
 import {setupHousing} from './housing-client.mjs';
+import {createFleetCar,releaseFleetCar} from './fleet-art.mjs';
+import {restoreFleet,fleetTuning,fleetVehicle} from './fleet.mjs';
+import {setupFleetUI} from './fleet-client.mjs';
 
 import * as THREE from 'https://esm.sh/three@0.170.0';
 // Software WebGL (used by headless browser QA) cannot draw full-size shadow maps
@@ -70,24 +73,41 @@ function releaseTile(group){scene.remove(group);group.traverse(o=>{if(o.geometry
 function streamAt(x,z){const tx=Math.floor(x/TILE_SIZE),tz=Math.floor(z/TILE_SIZE);if(tx!==lastTileX||tz!==lastTileZ){updateTiles(streamed,x,z,buildTile,releaseTile,2);lastTileX=tx;lastTileZ=tz;document.querySelector('#stream').textContent=`${streamed.size} / ${TILE_SIZE}m tiles`}}
 // Third-person walking and enter/exit vehicle.
 const {avatar,animate:animateAvatar}=createCharacter(THREE);scene.add(avatar);avatar.position.set(8,.1,12);avatar.visible=false;let onFoot=false;
-function switchMode(){if(!started||paused||activities.isOpen()||garageUI.isOpen()||housing.isOpen()||housing.inside())return;if(!onFoot){if(Math.abs(velocity)>3)return;const safe=findSafeExit(car.position,heading,nearbyObstacles(car.position.x,car.position.z));if(!safe)return;onFoot=true;avatar.position.set(safe.x,.1,safe.z);avatar.visible=true;car.visible=true;velocity=0}else{if(!canEnterVehicle(avatar.position,car.position))return;onFoot=false;avatar.visible=false}document.querySelector('#mode').textContent=onFoot?'步行探索 / ON FOOT':'车辆驾驶 / DRIVING';document.querySelector('#enterBtn').textContent=onFoot?'上车 E':'下车 E';saveSession()}
+function switchMode(){if(!started||paused||activities.isOpen()||garageUI.isOpen()||housing.isOpen()||housing.inside()||fleetUI.isOpen())return;if(!onFoot){if(Math.abs(velocity)>3)return;const safe=findSafeExit(car.position,heading,nearbyObstacles(car.position.x,car.position.z));if(!safe)return;onFoot=true;avatar.position.set(safe.x,.1,safe.z);avatar.visible=true;car.visible=true;velocity=0}else{if(!canEnterVehicle(avatar.position,car.position))return;onFoot=false;avatar.visible=false}document.querySelector('#mode').textContent=onFoot?'步行探索 / ON FOOT':'车辆驾驶 / DRIVING';document.querySelector('#enterBtn').textContent=onFoot?'上车 E':'下车 E';saveSession()}
 // car model
-const {car,headlights,updateWheels,setPaint}=createSportsCar(THREE);scene.add(car);car.position.set(0,.15,12);
+let vehicleRig=createSportsCar(THREE);
+const car=new THREE.Group();car.name='Player Vehicle Root';car.add(vehicleRig.car);
+scene.add(car);car.position.set(0,.15,12);
+let headlights=vehicleRig.headlights;
+const updateWheels=distance=>vehicleRig.updateWheels(distance);
+const setPaint=hex=>vehicleRig.setPaint(hex);
+function equipFleetVehicle(id){
+ if(!fleetVehicle(id))return false;
+ const old=vehicleRig;
+ vehicleRig=createFleetCar(THREE,id);
+ car.remove(old.car);car.add(vehicleRig.car);
+ headlights=vehicleRig.headlights;releaseFleetCar(old.car);
+ setPaint(garageTuning(garageProfile).paintHex);
+ const display=document.getElementById('fleetCurrent');
+ if(display)display.textContent=fleetVehicle(id).name;
+ return true;
+}
 const trafficWorld=createTrafficWorld(THREE,scene,45);
 // mission beacon
 const beacon=new THREE.Group();const beam=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,100,24,1,true),new THREE.MeshBasicMaterial({color:0x3ee8ff,transparent:true,opacity:.15,side:THREE.DoubleSide,depthWrite:false}));beam.position.y=50;beacon.add(beam);const ring=new THREE.Mesh(new THREE.TorusGeometry(4,.17,8,48),new THREE.MeshBasicMaterial({color:0x61f4ff}));ring.rotation.x=Math.PI/2;ring.position.y=.3;beacon.add(ring);beacon.position.set(0,0,-290);scene.add(beacon);
-let progress,garageProfile,housingProfile;
+let progress,garageProfile,housingProfile,fleetProfile;
 try{
  const raw=JSON.parse(localStorage.getItem("azure-coast-driving-v2")||"{}");
  progress=sanitizeProgress(raw,ROUTE.length);
  garageProfile=restoreGarage(raw.garage);
  housingProfile=restoreHousing(raw.housing);
-}catch{progress=createProgress();garageProfile=restoreGarage(null);housingProfile=restoreHousing(null)}
-setPaint(garageTuning(garageProfile).paintHex);
-function persist(){try{localStorage.setItem("azure-coast-driving-v2",JSON.stringify({...progress,garage:garageProfile,housing:housingProfile}))}catch{}}
+ fleetProfile=restoreFleet(raw.fleet);
+}catch{progress=createProgress();garageProfile=restoreGarage(null);housingProfile=restoreHousing(null);fleetProfile=restoreFleet(null)}
+equipFleetVehicle(fleetProfile.active);
+function persist(){try{localStorage.setItem("azure-coast-driving-v2",JSON.stringify({...progress,garage:garageProfile,housing:housingProfile,fleet:fleetProfile}))}catch{}}
 function updateRoute(){const m=ROUTE[progress.stage];beacon.visible=!!m;if(m){beacon.position.set(m.x,0,m.z);document.querySelector("#objective").textContent=`${progress.stage+1}/${ROUTE.length} · ${m.name} · $${m.reward.toLocaleString()}`}else document.querySelector("#objective").textContent="全程完成 · 自由探索";document.querySelector("#credits").textContent=progress.credits.toLocaleString();document.querySelector("#condition").textContent=Math.max(0,100-progress.damage)+"%"}updateRoute();
 
-const keys={};const clearControls=()=>{for(const k of Object.keys(keys))keys[k]=false};window.addEventListener('blur',clearControls);document.addEventListener('visibilitychange',()=>{if(document.hidden){clearControls();if(started&&!paused)togglePause()}});document.addEventListener('keydown',e=>{if(e.target?.closest?.('input,textarea,select,[contenteditable]'))return;const key=e.key.toLowerCase();if(e.repeat&&['e','c','h','r','p','m','f','g','j','b','i','escape'].includes(key))return;keys[key]=true;
+const keys={};const clearControls=()=>{for(const k of Object.keys(keys))keys[k]=false};window.addEventListener('blur',clearControls);document.addEventListener('visibilitychange',()=>{if(document.hidden){clearControls();if(started&&!paused)togglePause()}});document.addEventListener('keydown',e=>{if(e.target?.closest?.('input,textarea,select,[contenteditable]'))return;const key=e.key.toLowerCase();if(e.repeat&&['e','c','h','r','p','m','f','g','j','b','i','k','escape'].includes(key))return;keys[key]=true;
 if(housing.inside()){
  if(key==='e'||e.key==='Escape'){if(housing.decorating())housing.closeDecorate();else housing.exit();return}
  if(key==='i'){housing.toggleDecorate();return}
@@ -95,14 +115,16 @@ if(housing.inside()){
  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
  return;
 }
-if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.key.toLowerCase()==='e'&&!e.repeat)switchMode();if(e.key.toLowerCase()==='c')view=(view+1)%3;if(e.key.toLowerCase()==='h')headlights.forEach(l=>l.visible=!l.visible);if(e.key.toLowerCase()==='r')reset();if(e.key==='Escape'&&housing.isOpen()){housing.close();return}
+if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.key.toLowerCase()==='e'&&!e.repeat)switchMode();if(e.key.toLowerCase()==='c')view=(view+1)%3;if(e.key.toLowerCase()==='h')headlights.forEach(l=>l.visible=!l.visible);if(e.key.toLowerCase()==='r')reset();if(e.key==='Escape'&&fleetUI.isOpen()){fleetUI.close();return}
+if(e.key==='Escape'&&housing.isOpen()){housing.close();return}
 if(e.key==='Escape'&&garageUI.isOpen()){garageUI.close();return}
 if(e.key==='Escape'&&activities.isOpen()){activities.close();return}
 if(e.key==='Escape'&&navigation.isOpen()){navigation.closeMap();return}
-if(key==='j'){if(housing.isOpen())housing.close();if(garageUI.isOpen())garageUI.close();if(navigation.isOpen())navigation.closeMap();activities.toggle();return}
-if(key==='g'){if(housing.isOpen())housing.close();if(activities.isOpen())activities.close();if(navigation.isOpen())navigation.closeMap();garageUI.toggle();return}
-if(key==='b'){if(activities.isOpen())activities.close();if(garageUI.isOpen())garageUI.close();if(navigation.isOpen())navigation.closeMap();housing.toggle();return}
-if(key==='f'){if(!activities.active()&&housing.canInteract()){housing.interact();return}if(!activities.active()&&garageUI.access()){garageUI.open();return}activities.interact();return}if(e.key.toLowerCase()==='p'||e.key==='Escape')togglePause();if(e.key.toLowerCase()==='m')toggleMap()});document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;b.addEventListener('pointerdown',e=>{keys[k]=true;b.setPointerCapture(e.pointerId)});b.addEventListener('pointerup',()=>keys[k]=false);b.addEventListener('pointercancel',()=>keys[k]=false)});let started=false,paused=false,view=0,velocity=0,heading=0,last=performance.now(),done=false,collisions=0,collisionCooldown=0;
+if(key==='j'){if(fleetUI.isOpen())fleetUI.close();if(housing.isOpen())housing.close();if(garageUI.isOpen())garageUI.close();if(navigation.isOpen())navigation.closeMap();activities.toggle();return}
+if(key==='g'){if(fleetUI.isOpen())fleetUI.close();if(housing.isOpen())housing.close();if(activities.isOpen())activities.close();if(navigation.isOpen())navigation.closeMap();garageUI.toggle();return}
+if(key==='b'){if(fleetUI.isOpen())fleetUI.close();if(activities.isOpen())activities.close();if(garageUI.isOpen())garageUI.close();if(navigation.isOpen())navigation.closeMap();housing.toggle();return}
+if(key==='k'){if(housing.isOpen())housing.close();if(activities.isOpen())activities.close();if(garageUI.isOpen())garageUI.close();if(navigation.isOpen())navigation.closeMap();fleetUI.toggle();return}
+if(key==='f'){if(!activities.active()&&housing.canInteract()){housing.interact();return}if(!activities.active()&&fleetUI.access()){fleetUI.open();return}if(!activities.active()&&garageUI.access()){garageUI.open();return}activities.interact();return}if(e.key.toLowerCase()==='p'||e.key==='Escape')togglePause();if(e.key.toLowerCase()==='m')toggleMap()});document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;b.addEventListener('pointerdown',e=>{keys[k]=true;b.setPointerCapture(e.pointerId)});b.addEventListener('pointerup',()=>keys[k]=false);b.addEventListener('pointercancel',()=>keys[k]=false)});let started=false,paused=false,view=0,velocity=0,heading=0,last=performance.now(),done=false,collisions=0,collisionCooldown=0;
 const SESSION_KEY='azure-coast-session-v3';
 const ENV_KEY='azure-coast-environment-v1';
 let environment;try{environment=normalizeEnvironment(JSON.parse(localStorage.getItem(ENV_KEY)||'{}'))}catch{environment=normalizeEnvironment()}
@@ -112,7 +134,7 @@ environmentHour.addEventListener('input',()=>{environment.hour=Number(environmen
 function saveSession(){try{localStorage.setItem(SESSION_KEY,JSON.stringify({version:SAVE_VERSION,car:{x:car.position.x,z:car.position.z,heading},avatar:{x:avatar.position.x,z:avatar.position.z,heading:avatar.rotation.y},onFoot,view}))}catch{}}
 try{const session=restoreSession(JSON.parse(localStorage.getItem(SESSION_KEY)||'null'));if(session){const safeCar=safeSpawn(session.car,2.3);if(!safeCar)throw Error("Unsafe saved vehicle position");car.position.x=safeCar.x;car.position.z=safeCar.z;heading=session.car.heading;car.rotation.y=heading;view=session.view;if(session.avatar){const safeAvatar=safeSpawn(session.avatar,.7);if(safeAvatar){avatar.position.x=safeAvatar.x;avatar.position.z=safeAvatar.z;avatar.rotation.y=session.avatar.heading}else session.avatar=null}onFoot=session.onFoot&&!!session.avatar;avatar.visible=onFoot;document.querySelector('#mode').textContent=onFoot?'步行探索 / ON FOOT':'车辆驾驶 / DRIVING';document.querySelector('#enterBtn').textContent=onFoot?'上车 E':'下车 E'}}catch{}
 window.addEventListener('pagehide',saveSession);
-function reset(){car.position.set(0,.15,12);velocity=0;heading=0;done=false;beacon.visible=true;updateRoute()}document.querySelector('#enterBtn').onclick=switchMode;document.querySelector('#begin').onclick=()=>{clearControls();started=true;paused=false;document.querySelector('#start').classList.add('hidden')};function togglePause(){if(!started)return;clearControls();navigation.closeMap();activities.close();garageUI.close();housing.close();if(housing.inside())housing.closeDecorate();paused=!paused;document.querySelector('#pause').classList.toggle('visible',paused)}function toggleMap(){if(housing.inside())return;if(housing.isOpen())housing.close();if(activities.isOpen())activities.close();if(garageUI.isOpen())garageUI.close();navigation.toggleMap()}document.querySelector('#resume').onclick=togglePause;document.querySelector('#restart').onclick=()=>{reset();togglePause()};document.querySelector('#repair').onclick=()=>{if(progress.credits>=600&&progress.damage>0){progress.credits-=600;progress.damage=0;persist();updateRoute()}};document.querySelector('#pauseBtn').onclick=togglePause;document.querySelector('#cameraBtn').onclick=()=>view=(view+1)%3;const minimap=document.querySelector('#minimap'),ctx=minimap.getContext('2d');function drawMap(){ctx.fillStyle='#0a1c29';ctx.fillRect(0,0,220,220);ctx.save();ctx.translate(110,110);ctx.rotate(onFoot?avatar.rotation.y:heading);ctx.scale(.37,.37);ctx.strokeStyle='#567080';ctx.lineWidth=12;for(let i=-6;i<=6;i++){let x=i*100-(onFoot?avatar.position.x:car.position.x);let z=i*100-(onFoot?avatar.position.z:car.position.z);ctx.beginPath();ctx.moveTo(x,-800);ctx.lineTo(x,800);ctx.stroke();ctx.beginPath();ctx.moveTo(-800,z);ctx.lineTo(800,z);ctx.stroke()}const active=navigation.currentTarget()||(beacon.visible?beacon.position:null);if(active){ctx.fillStyle='#51e9ff';ctx.beginPath();ctx.arc(active.x-(onFoot?avatar.position.x:car.position.x),active.z-(onFoot?avatar.position.z:car.position.z),5,0,Math.PI*2);ctx.fill()}ctx.restore();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(110,95);ctx.lineTo(102,122);ctx.lineTo(118,122);ctx.closePath();ctx.fill()}
+function reset(){car.position.set(0,.15,12);velocity=0;heading=0;done=false;beacon.visible=true;updateRoute()}document.querySelector('#enterBtn').onclick=switchMode;document.querySelector('#begin').onclick=()=>{clearControls();started=true;paused=false;document.querySelector('#start').classList.add('hidden')};function togglePause(){if(!started)return;clearControls();navigation.closeMap();activities.close();garageUI.close();housing.close();fleetUI.close();if(housing.inside())housing.closeDecorate();paused=!paused;document.querySelector('#pause').classList.toggle('visible',paused)}function toggleMap(){if(housing.inside())return;if(fleetUI.isOpen())fleetUI.close();if(housing.isOpen())housing.close();if(activities.isOpen())activities.close();if(garageUI.isOpen())garageUI.close();navigation.toggleMap()}document.querySelector('#resume').onclick=togglePause;document.querySelector('#restart').onclick=()=>{reset();togglePause()};document.querySelector('#repair').onclick=()=>{if(progress.credits>=600&&progress.damage>0){progress.credits-=600;progress.damage=0;persist();updateRoute()}};document.querySelector('#pauseBtn').onclick=togglePause;document.querySelector('#cameraBtn').onclick=()=>view=(view+1)%3;const minimap=document.querySelector('#minimap'),ctx=minimap.getContext('2d');function drawMap(){ctx.fillStyle='#0a1c29';ctx.fillRect(0,0,220,220);ctx.save();ctx.translate(110,110);ctx.rotate(onFoot?avatar.rotation.y:heading);ctx.scale(.37,.37);ctx.strokeStyle='#567080';ctx.lineWidth=12;for(let i=-6;i<=6;i++){let x=i*100-(onFoot?avatar.position.x:car.position.x);let z=i*100-(onFoot?avatar.position.z:car.position.z);ctx.beginPath();ctx.moveTo(x,-800);ctx.lineTo(x,800);ctx.stroke();ctx.beginPath();ctx.moveTo(-800,z);ctx.lineTo(800,z);ctx.stroke()}const active=navigation.currentTarget()||(beacon.visible?beacon.position:null);if(active){ctx.fillStyle='#51e9ff';ctx.beginPath();ctx.arc(active.x-(onFoot?avatar.position.x:car.position.x),active.z-(onFoot?avatar.position.z:car.position.z),5,0,Math.PI*2);ctx.fill()}ctx.restore();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(110,95);ctx.lineTo(102,122);ctx.lineTo(118,122);ctx.closePath();ctx.fill()}
 const navigation=setupJourneyUI({
   getPosition:()=>onFoot?avatar.position:car.position,
   getHeading:()=>onFoot?avatar.rotation.y:heading,
