@@ -58,7 +58,7 @@ export function setupFleetUI({
     preview=selected===car.id,buyable=!owned&&access.allowed&&wallet>=car.price,
     changeable=owned&&!active&&access.allowed,sellable=owned&&!active&&!car.starter&&access.allowed;
    return '<article class="fleet-card '+(preview?'is-preview':'')+'" data-fleet-card="'+car.id+'">'+
-    '<div class="fleet-card-header"><small>'+car.type+' / '+car.drive?.toUpperCase?.()+'</small>'+
+    '<div class="fleet-card-header"><small>'+car.type+' / '+(car.drive||'RWD')+'</small>'+
     '<span>'+Math.round(car.top)+' KM/H</span></div>'+
     '<h3>'+car.name+'</h3><div class="fleet-card-stats"><span>动力 '+Math.round(car.acceleration*100)+'%</span><span>操控 '+Math.round(car.steering*100)+'%</span></div>'+
     '<strong class="fleet-card-price">'+(car.starter?'免费赠送':'$'+money(car.price))+'</strong>'+
@@ -118,8 +118,8 @@ export function setupFleetUI({
   isOpen:()=>open,access:()=>dealershipAccess(getPlayer()).allowed,
   update:(now)=>{
    if(!open||!Number.isFinite(now)||now-previewStamp<55)return;
-   previewStamp=now;
-   displayGroup.rotation.y+=.0004*(now-previewStamp+55);
+   const elapsed=Math.min(100,now-previewStamp);previewStamp=now;
+   displayGroup.rotation.y+=elapsed*.0003;
   }
  };
 }
