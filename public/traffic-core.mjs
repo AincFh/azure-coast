@@ -41,7 +41,7 @@ export function trafficTargetSpeed(agent,cars,timeSeconds,player=null){
  let target=agent.cruise;
  const junction=nextJunction(agent),stop=junction-agent.dir*12;
  const remaining=agent.dir*(stop-agent.coord);
- if(remaining>=0&&remaining<48&&!signalIsGreen(agent.axis,agent.road,Math.round(junction/100),timeSeconds))
+ if(remaining>=0&&remaining<48&&!signalIsGreen(agent.axis,agent.axis==='z'?agent.road:Math.round(junction/100),agent.axis==='z'?Math.round(junction/100):agent.road,timeSeconds))
   target=Math.min(target,Math.max(0,Math.sqrt(2*6*remaining)-.4));
  // Adaptive cruise control: a moving vehicle never drives through the one ahead.
  for(const other of cars){
