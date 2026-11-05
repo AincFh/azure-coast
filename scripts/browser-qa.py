@@ -4,6 +4,7 @@ Requires: pip install playwright==1.56.0; python -m playwright install chromium
 This is a QA job, not a substitute for game quality review or release approval.
 """
 import asyncio
+import json
 import os
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -86,6 +87,32 @@ async def main():
                     assets=await page.evaluate("""() => performance.getEntriesByType('resource').map(x=>x.name)""")
                     assert any('/vendor/three/three.module.js' in url for url in assets), assets[:35]
                     assert not any('esm.sh/three' in url for url in assets), assets[:35]
+                    # Open the real quality settings before launching 3D gameplay.
+                    # Make and persist changes, then verify the overlay does not
+                    # block driving controls when closed.
+                    await page.locator('#qualityStart').click()
+                    await page.locator('#qualityPanel').wait_for(state='visible',timeout=10000)
+                    await page.locator('#qualityMode').select_option('performance')
+                    assert '流畅优先' in await page.locator('#qualityEffective').inner_text()
+                    await page.locator('#qualityShowStats').check()
+                    assert await page.locator('#renderStatsOverlay').is_visible()
+                    assert json.loads(await page.evaluate(
+                        "() => localStorage.getItem('azure-coast-render-quality-v1')"
+                    )) == {'mode':'performance','showStats':True}
+                    await page.locator('#qualityMode').select_option('auto')
+                    await page.locator('#qualityShowStats').uncheck()
+                    assert not await page.locator('#renderStatsOverlay').is_visible()
+                    await page.locator('#qualityClose').click()
+                    assert not await page.locator('#qualityPanel').is_visible()
+                    render_snapshot = await page.evaluate("""() => window.__AZURE_RENDER_DIAGNOSTICS__.snapshot()""")
+                    assert render_snapshot['mode'] == 'auto'
+                    assert render_snapshot['software'] is True
+                    assert render_snapshot['shadows'] is False
+                    assert 0.5 <= render_snapshot['dpr'] <= 0.75
+                    with (OUT / f'{label}-renderer-diagnostics.json').open('w',encoding='utf-8') as report:
+                        json.dump({'source':'headless Chromium / SwiftShader; diagnostic only',
+                                   'width':width,'height':height,'render':render_snapshot},
+                                  report,ensure_ascii=False,indent=2)
                     await page.locator('#begin').click()
                     await page.locator('#audioOpen').click()
                     await page.locator('#audioPanel').wait_for(state='visible',timeout=10000)
