@@ -11,7 +11,11 @@ from playwright.async_api import async_playwright
 BASE = os.getenv('AZURE_QA_URL', 'http://127.0.0.1:18765')
 OUT = Path('artifacts/browser-qa')
 OUT.mkdir(parents=True, exist_ok=True)
-SIZES = [(375, 812), (768, 1024), (1024, 768), (1440, 900)]
+ALL_SIZES = [(375, 812), (768, 1024), (1024, 768), (1440, 900)]
+VIEWPORT_FILTER = os.getenv('AZURE_QA_VIEWPORT')
+SIZES = [size for size in ALL_SIZES if VIEWPORT_FILTER in (None, str(size[0]))]
+if not SIZES:
+    raise ValueError('Unknown AZURE_QA_VIEWPORT (expected 375, 768, 1024 or 1440)')
 
 async def check_no_horizontal_overflow(page, label):
     numbers = await page.evaluate('''() => ({width: innerWidth, scroll: document.documentElement.scrollWidth})''')
