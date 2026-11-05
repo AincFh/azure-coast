@@ -19,7 +19,7 @@ export function createGameAudio({win=window,preferences=DEFAULT_AUDIO,onStateCha
   const data=buffer.getChannelData(0);let seed=13071245;
   for(let i=0;i<length;i++){
    seed=(Math.imul(seed,1664525)+1013904223)|0;
-   data[i]=((seed>>>1)/0x3fffffff)*2-1;
+   data[i]=((seed>>>0)/4294967296)*2-1;
   }
   return buffer;
  };
