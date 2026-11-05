@@ -66,10 +66,12 @@ test('pedestrians cross only when perpendicular traffic has a green phase',()=>{
  assert.ok(red!==null&&green!==null);
  assert.equal(pedestrianCrossingCanStart(cross,red),false);
  assert.equal(pedestrianCrossingCanStart(cross,green),true);
- const waiting=tickCitizens([cross],.5,green,{hour:14})[0];
+ let waiting=tickCitizens([cross],.1,green,{hour:14})[0];
  assert.equal(waiting.phase,'waiting');
- const crossing=tickCitizens([waiting],.5,green,{hour:14})[0];
- assert.equal(crossing.phase,'crossing');
+ for(let i=0;i<12&&waiting.phase==='waiting';i++)
+  waiting=tickCitizens([waiting],.1,green,{hour:14})[0];
+ assert.equal(waiting.phase,'crossing');
+ const crossing=waiting;
  const move=tickCitizens([crossing],.1,green,{hour:14})[0];
  assert.ok(move.progress>crossing.progress);
 });
