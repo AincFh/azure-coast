@@ -6,9 +6,10 @@
 
 ## 本地运行
 
-需要 **Node.js 20+**。目前没有 npm 运行时依赖，无须安装第三方包即可启动本地服务器。
+需要 **Node.js 20+**。3D 引擎固定使用 **Three.js 0.170.0（MIT）**，运行时从本地静态目录加载。首次运行先安装锁定版本的 npm 依赖；`npm start` 会自动将浏览器模块及 MIT 许可复制到 `public/vendor/three/`。
 
 ```bash
+npm install --no-audit --no-fund
 npm start
 ```
 
@@ -16,7 +17,7 @@ npm start
 - 3D 游戏：<http://localhost:8080/play.html>
 - 城市探索台：<http://localhost:8080/explore.html>
 
-3D 游戏在浏览器端从 `https://esm.sh/three@0.170.0` 加载 Three.js，因此初次体验需要能够连接该 CDN。
+3D 游戏现从本机的 `/vendor/three/three.module.js` 加载 Three.js，支持网络隔离环境运行；开发和 CI 仍需在依赖安装阶段访问 npm 包源。不会在没有安装依赖时宣称脱离网络可直接启动。
 
 ## 当前可运行的内容
 
