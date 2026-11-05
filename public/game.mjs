@@ -23,7 +23,7 @@ import {createGameAudio} from './audio-world.mjs';
 import {setupAudioPanel} from './audio-ui.mjs';
 import {cameraLayout,cameraInterpolationFactor} from './camera-rig.mjs';
 
-import * as THREE from 'https://esm.sh/three@0.170.0';
+import * as THREE from './vendor/three/three.module.js';
 // Software WebGL (used by headless browser QA) cannot draw full-size shadow maps
 // at 1440px while accepting reliable mouse input. Keep production quality.
 const softwareRenderer=/HeadlessChrome/i.test(navigator.userAgent);
