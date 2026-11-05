@@ -50,15 +50,15 @@ async def main():
                 label = str(width)
                 # Fund the test wallet BEFORE the first 3D page initializes.
                 # This avoids two extra software-WebGL reloads at 1440px.
-                if width == 1440:
-                    await context.add_init_script("""(() => {
-                      if (location.pathname === '/play.html' && !localStorage.getItem('azure-qa-funded')) {
-                        const saved = JSON.parse(localStorage.getItem('azure-coast-driving-v2')||'{}');
-                        saved.credits = 140000;
-                        localStorage.setItem('azure-coast-driving-v2', JSON.stringify(saved));
-                        localStorage.setItem('azure-qa-funded','1');
-                      }
-                    })();""")
+                seed = 140000 if width == 1440 else 500
+                await context.add_init_script("""(() => {
+                  if (location.pathname === '/play.html' && !localStorage.getItem('azure-qa-funded')) {
+                    const saved = JSON.parse(localStorage.getItem('azure-coast-driving-v2')||'{}');
+                    saved.credits = __SEED__;
+                    localStorage.setItem('azure-coast-driving-v2', JSON.stringify(saved));
+                    localStorage.setItem('azure-qa-funded','1');
+                  }
+                })();""".replace('__SEED__',str(seed)))
                 try:
                     await page.goto(BASE + '/', wait_until='domcontentloaded')
                     await page.locator('#view').wait_for(timeout=10000)
