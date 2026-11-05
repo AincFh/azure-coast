@@ -14,3 +14,14 @@
 @media(max-width:850px){.nav-status{top:181px;left:8px;width:min(235px,calc(100vw - 16px));padding:10px 12px}.nav-status strong{font-size:17px}.nav-metrics span:first-child{font-size:15px}.world-map-content{grid-template-columns:1fr}.world-map-shell{max-height:calc(100dvh - 22px);border-radius:15px}.world-map-canvas{padding:9px}.world-map-canvas canvas{height:38vh;min-height:210px}.world-map-side{padding:12px}.map-stop-list{grid-template-columns:repeat(2,minmax(0,1fr))}.map-stop-list button{padding:8px}.world-map-actions{flex-direction:row}.world-map-actions>*{flex:1}}
 @media(max-width:450px){.nav-status{top:175px;left:8px;width:min(205px,calc(100vw - 16px))}.nav-status strong{font-size:14px}.world-map-header{padding:12px}.world-map-header h2{font-size:19px}.world-map-header button{padding:7px 9px}.world-map-canvas canvas{height:34vh;min-height:190px}.world-map-content{display:flex;flex-direction:column}.world-map-side{gap:8px}.map-stop-list button{gap:7px}.map-stop-list button strong{font-size:11px}.world-map-actions{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.map-stop-list button{transition:none}}
+
+/* More navigable destinations must scroll as one document on narrow screens.
+   Previously the inner sidebar clipped later stops under the footer action row,
+   making real fuel station buttons impossible to tap at 375 px. */
+@media(max-width:850px){
+ .world-map-shell{height:min(900px,calc(100dvh - 22px))}
+ .world-map-content{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain}
+ .world-map-side{flex:0 0 auto;overflow:visible;min-height:max-content}
+ .map-stop-list{min-height:max-content;align-content:start}
+ .world-map-actions{position:static;flex:0 0 auto;margin-top:4px}
+}
