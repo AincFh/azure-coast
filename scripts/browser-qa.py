@@ -69,7 +69,7 @@ async def main():
                     assert await page.locator('#navDestination').inner_text() == '日落山崖', 'Journey was not restored'
                     await page.locator('#begin').click()
                     await page.locator('#environmentHour').evaluate("""e => {e.value='15';e.dispatchEvent(new Event('input',{bubbles:true}))}""")
-                    await page.locator('#environmentWeather').select_option('clear')
+                    await page.locator('#environmentWeather').evaluate("""e => {e.value='clear';e.dispatchEvent(new Event('change',{bubbles:true}))}""")
                     await page.wait_for_timeout(450)
                     await page.screenshot(path=str(OUT / f'{label}-drive.png'), timeout=90000, animations='disabled')
                     assert not page_errors, f'Browser script errors at {label}: {page_errors}'
