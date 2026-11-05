@@ -26,7 +26,7 @@ export function setupHousing({
    mode:'请先下车，再进入住宅',
    moving:'请先停车',
    occupied:'该家具位置已被占用，请选择空位',
-   not-owned:'尚未购买这处住宅',
+   'not-owned':'尚未购买这处住宅',
    wallet:'账户余额异常，交易已拒绝'
   }[reason]||'操作无法完成';
  }
