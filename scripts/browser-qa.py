@@ -35,14 +35,14 @@ async def main():
                 # Fund the test wallet BEFORE the first 3D page initializes.
                 # This avoids two extra software-WebGL reloads at 1440px.
                 if width == 1440:
-                    await context.add_init_script("""() => {
+                    await context.add_init_script("""(() => {
                       if (location.pathname === '/play.html' && !sessionStorage.getItem('azure-qa-funded')) {
                         const saved = JSON.parse(localStorage.getItem('azure-coast-driving-v2')||'{}');
                         saved.credits = 5000;
                         localStorage.setItem('azure-coast-driving-v2', JSON.stringify(saved));
                         sessionStorage.setItem('azure-qa-funded','1');
                       }
-                    }""")
+                    })();""")
                 try:
                     await page.goto(BASE + '/', wait_until='domcontentloaded')
                     await page.locator('#view').wait_for(timeout=10000)
