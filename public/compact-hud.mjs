@@ -31,3 +31,6 @@ export function setupCompactMissionHUD(doc=document,win=doc.defaultView){
  setOpen(false);
  return {setOpen,isOpen};
 }
+
+// This module is loaded directly by play.html; initialize once on page boot.
+if(typeof document!=='undefined')setupCompactMissionHUD(document);
