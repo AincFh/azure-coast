@@ -11,7 +11,13 @@ export const SHOPS=Object.freeze([
  Object.freeze({id:'market',name:'海岸便利店',kind:'food',x:-12,z:126,radius:19,category:'零售 · 社区商店',
   description:'城市日常补给，提供随身食物与饮料。'}),
  Object.freeze({id:'station',name:'AZURE 能源站',kind:'energy',x:-15,z:-15,radius:22,category:'交通 · 能源补给',
-  description:'停车后补充燃油或为电动车充电，维持真实驾驶续航。'})
+  description:'停车后补充燃油或为电动车充电，维持真实驾驶续航。'}),
+ Object.freeze({id:'energy-marina',name:'游艇港能源站',kind:'energy',x:305,z:-390,radius:24,category:'交通 · 海湾补给站',
+  description:'游艇港附近的24小时能源站，驾驶车辆停稳后补充燃油或充电。'}),
+ Object.freeze({id:'energy-center',name:'城区能源站',kind:'energy',x:305,z:204,radius:24,category:'交通 · 城区补给站',
+  description:'中央城区全天候交通服务，可补充驾驶能源。'}),
+ Object.freeze({id:'energy-cliff',name:'山崖公路能源站',kind:'energy',x:-305,z:306,radius:24,category:'交通 · 郊区补给站',
+  description:'郊区公路旁的车辆服务站，在进入山地区域前补给。'})
 ]);
 const product=(id,name,price,hunger,hydration,stamina,shops,description)=>Object.freeze({
  id,name,price,hunger,hydration,stamina,shops:Object.freeze(shops),description
@@ -70,6 +76,17 @@ export function closestShop(position,limit=27){
   if(d<=best){found=p;best=d}
  }
  return found;
+}
+/** Find the nearest actual fuel/charge shop, not a fictional menu location. */
+export function nearestEnergyShop(position){
+ if(!position||![position.x,position.z].every(Number.isFinite))return null;
+ let nearest=null,distance=Infinity;
+ for(const shop of SHOPS){
+  if(shop.kind!=='energy')continue;
+  const d=Math.hypot(position.x-shop.x,position.z-shop.z);
+  if(d<distance){distance=d;nearest=shop}
+ }
+ return nearest;
 }
 export function shopAccess(id,{position,mode,speed=0}={}){
  const place=lifeShop(id);
@@ -142,7 +159,10 @@ export function refuelVehicle(raw,credits,carId,player){
  const state=restoreLiving(raw),item=energyProduct(carId);
  if(!fleetVehicle(carId))return {state,balance:credits,reason:'unknown'};
  if(!isWallet(credits))return {state,balance:credits,reason:'wallet'};
- const access=shopAccess('station',player);
+ // A car can refuel at any registered physical energy station. All sites
+ // share the same pricing and the single existing game wallet.
+ const actual=nearestEnergyShop(player?.position);
+ const access=shopAccess(actual?.id||'station',player);
  if(!access.allowed)return {state,balance:credits,reason:access.reason};
  const fuel=state.fuel[carId];
  if(fuel>=99.5)return {state,balance:credits,reason:'full'};

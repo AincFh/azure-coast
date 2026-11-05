@@ -1,4 +1,5 @@
 /** Shared, renderer-independent itinerary contract for Explore and Drive. */
+import {SHOPS} from './living-core.mjs';
 export const PLANNER_KEY='azure-coast-route-v2';
 export const JOURNEY_KEY='azure-coast-active-journey-v1';
 export const JOURNEY_VERSION=1;
@@ -11,7 +12,11 @@ export const CITY_STOPS=Object.freeze([
   {id:'palms',name:'棕榈海岸',x:-500,z:-200,accent:'#eac38d'},
   {id:'cliff',name:'日落山崖',x:500,z:-500,accent:'#e2be96'},
   {id:'harbor',name:'工业港湾',x:500,z:400,accent:'#b8c2d5'},
-  {id:'oldtown',name:'旧城艺术区',x:100,z:300,accent:'#dfb7d5'}
+  {id:'oldtown',name:'旧城艺术区',x:100,z:300,accent:'#dfb7d5'},
+  // All roadside energy sites are real playable shops, not fabricated map pins.
+  ...SHOPS.filter(s=>s.kind==='energy').map(s=>Object.freeze({
+   id:'fuel-'+s.id,name:s.name,x:s.x,z:s.z,accent:'#b5eacb'
+  }))
 ]);
 const byId=new Map(CITY_STOPS.map(stop=>[stop.id,stop]));
 export function stopById(id){return byId.get(id)||null}

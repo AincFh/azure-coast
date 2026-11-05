@@ -245,6 +245,10 @@ async def main():
                         await page.locator('#fleetClose').click()
                     await page.locator('#mapBtn').click()
                     await page.locator('#mapOverlay').wait_for(state='visible')
+                    # Four physical charge sites are also navigable map entries.
+                    assert await page.locator('#mapStopList [data-stop-id^="fuel-"]').count() == 4
+                    await page.locator('#mapStopList [data-stop-id="fuel-energy-center"]').click()
+                    assert await page.locator('#navDestination').text_content() == '城区能源站'
                     await page.locator('#mapStopList [data-stop-id="cliff"]').click()
                     assert await page.locator('#navDestination').text_content() == '日落山崖'
                     await page.screenshot(path=str(OUT / f'{label}-map.png'), timeout=90000, animations='disabled')
