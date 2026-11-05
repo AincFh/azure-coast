@@ -65,8 +65,23 @@ export function tickTraffic(cars,dt,timeSeconds,player=null){
  return cars.map(agent=>{
   const target=trafficTargetSpeed(agent,cars,timeSeconds,player);
   const acceleration=target>agent.speed?3.2:9;
-  const speed=agent.speed+clamp(target-agent.speed,-acceleration*t,acceleration*t);
-  let coord=agent.coord+agent.dir*Math.max(0,speed)*t;
+  let speed=agent.speed+clamp(target-agent.speed,-acceleration*t,acceleration*t);
+  // Hard safety clamp is needed when a fast agent starts close behind a
+  // stopped vehicle: comfortable braking alone cannot prevent overlap.
+  let travel=Math.max(0,speed)*t;
+  for(const other of cars){
+   if(other.id===agent.id||other.axis!==agent.axis||other.road!==agent.road||other.dir!==agent.dir)continue;
+   const gap=agent.dir*(other.coord-agent.coord);
+   if(gap>0&&gap<18)travel=Math.min(travel,Math.max(0,gap-8));
+  }
+  if(player&&Number.isFinite(player.x)&&Number.isFinite(player.z)){
+   const pos=trafficPosition(agent),lateral=agent.axis==='z'?Math.abs(player.x-pos.x):Math.abs(player.z-pos.z);
+   const forward=agent.dir*((agent.axis==='z'?player.z:player.x)-agent.coord);
+   if(lateral<4.3&&forward>0&&forward<22)
+    travel=Math.min(travel,Math.max(0,forward-12));
+  }
+  speed=Math.min(speed,travel/t);
+  let coord=agent.coord+agent.dir*travel;
   if(coord>TRAFFIC_LIMIT)coord=-TRAFFIC_LIMIT;
   if(coord< -TRAFFIC_LIMIT)coord=TRAFFIC_LIMIT;
   return {...agent,coord,speed:Math.max(0,speed),odometer:agent.odometer+Math.max(0,speed)*t};
