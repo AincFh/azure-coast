@@ -21,7 +21,7 @@ const at=(id,mode='foot',speed=0)=>{
 test('physical shops are located inside the city and not inside building collisions',()=>{
  assert.equal(SHOPS.length,6);
  assert.equal(SHOPS.filter(s=>s.kind==='energy').length,4);
- assert.equal(new Set(SHOPS.map(x=>x.id)).size,3);
+ assert.equal(new Set(SHOPS.map(x=>x.id)).size,6);
  for(const place of SHOPS){
   assert.ok(place.x>=-630&&place.x<=630&&place.z>=-630&&place.z<=630);
   assert.equal(intersectsBuilding(place.x,place.z,.7,
