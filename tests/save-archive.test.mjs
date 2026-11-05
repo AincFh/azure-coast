@@ -158,5 +158,8 @@ test('full save vault controls and website profile integration have real handler
  assert.match(js,/validateSaveArchive/);
  assert.match(js,/applySaveArchive/);
  assert.match(js,/__AZURE_SNAPSHOT_RESTORING/);
- assert.match(site,/play\.html#saves/);
+ assert.match(site,/save\.html#saves/);
+ const portal=readFileSync(new URL('../public/save.html',import.meta.url),'utf8');
+ assert.match(portal,/id="saveManagerPanel"/);
+ assert.doesNotMatch(portal,/src="\/game\.mjs"/);
 });
