@@ -14,6 +14,10 @@ jobs:
         with:
           node-version: '22'
           cache: ''
+      - name: Install pinned browser runtime
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund --no-package-lock
+          npm run vendor:three
       - name: Syntax checks
         run: npm run check
       - name: Unit and integration tests
