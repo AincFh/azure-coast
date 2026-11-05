@@ -128,7 +128,14 @@ export function setupLivingUI({
  function update(now){
   if(!Number.isFinite(now)||now-lastUpdate<750)return;
   lastUpdate=now;
-  if(opened)render();else renderHud();
+  // Live vitals can update without re-creating checkout buttons every 750ms.
+  // DOM replacement during a real tap made the cashier UI intermittently
+  // unclickable on slower software-WebGL devices.
+  const vitality=livingIndicators(state(),getCarId());
+  renderHud(vitality);
+  if(opened)$('livingVitalStats').textContent='饱腹 '+vitality.hunger+
+   '% · 水分 '+vitality.hydration+'% · 精力 '+vitality.stamina+
+   '% · '+vitality.fuelUnit+' '+vitality.fuel+'%';
   const p=getPlayer(),place=closestShop(p.position,23);
   $('livingPrompt').hidden=opened||!place;
   if(place&&!opened){
