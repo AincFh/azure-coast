@@ -25,3 +25,12 @@
  .map-stop-list{min-height:max-content;align-content:start}
  .world-map-actions{position:static;flex:0 0 auto;margin-top:4px}
 }
+
+/* Full-size maps scroll the sidebar, never shrink the destination list
+   behind its trailing actions. Fixes pointer-event interception at 1024 px. */
+@media(min-width:851px){
+ .world-map-content{overflow:hidden;min-height:0}
+ .world-map-side{min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain}
+}
+.world-map-side .map-stop-list{flex:0 0 auto;min-height:max-content}
+.world-map-side .world-map-actions{flex:0 0 auto;margin-top:8px;position:static}
