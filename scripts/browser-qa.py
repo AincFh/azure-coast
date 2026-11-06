@@ -184,6 +184,18 @@ async def main():
                     await page.locator('#navDestination').wait_for(state='attached', timeout=10000)
                     assert await page.locator('#navDestination').text_content() == '海湾中心'
                     assert '雨天' in await page.locator('#environmentLabel').inner_text()
+                    # The selected rain must change actual vehicle handling
+                    # and the live stopping-distance estimate, not merely sky art.
+                    assert '雨天湿滑' in await page.locator('#roadGrip').inner_text()
+                    assert await page.locator('#roadTelemetry').get_attribute('data-weather') == 'rain'
+                    await page.locator('#environmentWeather').evaluate(
+                      """e => { e.value='clear'; e.dispatchEvent(new Event('change',{bubbles:true})) }""")
+                    assert '干燥路面' in await page.locator('#roadGrip').inner_text()
+                    assert await page.locator('#roadTelemetry').get_attribute('data-weather') == 'clear'
+                    await page.locator('#environmentWeather').evaluate(
+                      """e => { e.value='rain'; e.dispatchEvent(new Event('change',{bubbles:true})) }""")
+                    assert '雨天湿滑' in await page.locator('#roadGrip').inner_text()
+                    assert 'm' in await page.locator('#roadStopping').inner_text()
                     await open_city_system(page, width, 'activityOpen')
                     await page.locator('#activityPanel').wait_for(state='visible', timeout=10000)
                     assert await page.locator('#activityOfferList [data-activity-id]').count() == 8
