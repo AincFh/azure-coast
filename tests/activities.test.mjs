@@ -3,18 +3,20 @@ import assert from 'node:assert/strict';
 import {
  ACTIVITY_VERSION,ACTIVITY_KEY,CITY_CONTRACTS,DISPATCH,contractById,
  emptyActivities,restoreActivities,currentActivity,currentStep,startActivity,
- cancelActivity,distanceToActivity,interactActivity,interactionPrompt
+ cancelActivity,distanceToActivity,interactActivity,interactionPrompt,CAREER_RANKS,careerStatus
 } from '../public/activities.mjs';
 import {intersectsBuilding,nearbyObstacles} from '../public/physics.mjs';
 
 const vehicle=(x,z,speed=0)=>({position:{x,z},mode:'vehicle',speed});
 const foot=(x,z)=>({position:{x,z},mode:'foot',speed:0});
 
-test('three distinct city occupations exist with valid on-map checkpoints',()=>{
+test('eight distinct city professions and real-world checkpoint prerequisites exist',()=>{
  assert.equal(ACTIVITY_VERSION,1);
  assert.match(ACTIVITY_KEY,/city-services/);
- assert.equal(CITY_CONTRACTS.length,3);
- assert.equal(new Set(CITY_CONTRACTS.map(c=>c.id)).size,3);
+ assert.equal(CITY_CONTRACTS.length,8);
+ assert.equal(new Set(CITY_CONTRACTS.map(c=>c.id)).size,8);
+ assert.equal(CITY_CONTRACTS.filter(c=>c.unlockAt===0).length,3);
+ assert.deepEqual(CAREER_RANKS.map(x=>x.threshold),[0,3,8,20]);
  assert.ok(Number.isFinite(DISPATCH.x)&&Number.isFinite(DISPATCH.z));
  for(const c of CITY_CONTRACTS){
   assert.ok(c.reward>=1500,c.id);
@@ -110,7 +112,8 @@ test('restore clamps invalid or malicious save data and never silently completes
  });
  assert.equal(restored.index,1);
  assert.equal(restored.status,'active');
- assert.deepEqual(restored.completed,{courier:0,taxi:0,survey:3});
+ assert.deepEqual({courier:restored.completed.courier,taxi:restored.completed.taxi,survey:restored.completed.survey},{courier:0,taxi:0,survey:3});
+ assert.equal(Object.keys(restored.completed).length,8);
  assert.equal(restored.earned,0);
  assert.deepEqual(restored.history,['courier','taxi']);
  assert.equal(restoreActivities({version:5,id:'taxi'}).status,'idle');
@@ -119,7 +122,7 @@ test('restore clamps invalid or malicious save data and never silently completes
 
 test('completed activity counts and earnings persist through multiple real completions',()=>{
  let state=emptyActivities(),total=0;
- for(const c of CITY_CONTRACTS){
+ for(const c of CITY_CONTRACTS.slice(0,3)){
   state=startActivity(state,c.id).state;
   for(const step of c.steps){
    const result=interactActivity(state,{position:{x:step.x,z:step.z},mode:step.mode,speed:0});
@@ -129,13 +132,14 @@ test('completed activity counts and earnings persist through multiple real compl
  }
  assert.equal(total,9200);
  assert.equal(state.earned,total);
- assert.deepEqual(state.completed,{courier:1,taxi:1,survey:1});
+ assert.deepEqual({courier:state.completed.courier,taxi:state.completed.taxi,survey:state.completed.survey},{courier:1,taxi:1,survey:1});
+ assert.equal(careerStatus(state).level,2);
  assert.deepEqual(state.history,['courier','taxi','survey']);
  state=startActivity(state,'taxi').state;
  for(const goal of CITY_CONTRACTS[1].steps){
   state=interactActivity(state,{position:goal,mode:'vehicle',speed:0}).state;
  }
- assert.equal(state.earned,12400);
+ assert.equal(state.earned,12560); // 5% career bonus applied from level 2
  assert.equal(state.completed.taxi,2);
 });
 
@@ -147,4 +151,71 @@ test('interaction prompt changes with position, travel mode and speed',()=>{
  state=startActivity(emptyActivities(),'taxi').state;
  assert.match(interactionPrompt(state,{x:100,z:-300},'vehicle',12),/停车/);
  assert.match(interactionPrompt(state,{x:100,z:-300},'vehicle',0),/按 F/);
+});
+
+test('locked missions reject direct API calls until real completed jobs unlock them',()=>{
+ let state=emptyActivities();
+ assert.equal(startActivity(state,'market').reason,'locked');
+ assert.equal(startActivity(state,'festival').reason,'locked');
+ assert.equal(startActivity(state,'grand-tour').reason,'locked');
+ assert.equal(careerStatus(state).unlocked,3);
+ for(const id of ['courier','taxi']){
+  state=startActivity(state,id).state;
+  const contract=contractById(id);
+  for(const goal of contract.steps){
+   const result=interactActivity(state,{position:goal,mode:goal.mode,speed:0});
+   assert.equal(result.reason,null);
+   state=result.state;
+  }
+ }
+ const rank=careerStatus(state);
+ assert.equal(rank.total,2);
+ assert.equal(rank.level,1);
+ assert.equal(rank.unlocked,4);
+ assert.equal(rank.nextAt,3);
+ assert.equal(startActivity(state,'market').reason,null);
+ assert.equal(startActivity(state,'festival').reason,'locked');
+});
+test('career rank upgrades, bonus payouts and completed contract state persist',()=>{
+ let state=emptyActivities(),prior=0;
+ for(let completed=0;completed<21;completed++){
+  const rank=careerStatus(state);
+  const contract=contractById(completed%2?'taxi':'courier');
+  state=startActivity(state,contract.id).state;
+  let last;
+  for(const goal of contract.steps){
+   last=interactActivity(state,{position:goal,mode:goal.mode,speed:0});
+   state=last.state;
+  }
+  assert.equal(last.event,'completed');
+  assert.equal(last.reward,Math.round(contract.reward*(1+rank.bonus)));
+  assert.equal(state.earned,prior+last.reward);
+  prior=state.earned;
+  assert.equal(careerStatus(state).total,completed+1);
+  // A repeated final checkpoint must never reward twice.
+  assert.equal(interactActivity(state,{position:contract.steps.at(-1),mode:'foot',speed:0}).reward,0);
+  state=restoreActivities(JSON.parse(JSON.stringify(state)));
+ }
+ assert.equal(careerStatus(state).level,4);
+ assert.equal(careerStatus(state).bonus,.15);
+ assert.equal(careerStatus(state).unlocked,8);
+ assert.equal(startActivity(state,'grand-tour').reason,null);
+ assert.equal(careerStatus(state).nextAt,null);
+});
+test('advanced multi-checkpoint jobs genuinely require foot and parked-car interaction',()=>{
+ let state=emptyActivities();
+ // Prior completed jobs are genuine persisted counters. Higher-tier journey
+ // starts only when that save has already reached its unlock threshold.
+ state=restoreActivities({...state,completed:{courier:8,taxi:6}});
+ assert.equal(careerStatus(state).level,3);
+ state=startActivity(state,'grand-tour').state;
+ const tour=contractById('grand-tour');
+ assert.equal(tour.steps.length,5);
+ assert.equal(interactActivity(state,vehicle(0,-100)).reason,'mode');
+ for(let i=0;i<tour.steps.length;i++){
+  const goal=tour.steps[i];
+  assert.equal(interactActivity(state,{
+   position:{x:goal.x,z:goal.z},mode:goal.mode,speed:goal.mode==='vehicle'?9:0
+  }).reason,goal.mode==='vehicle'?'moving':'far'===goal.mode?'' :null);
+ }
 });
