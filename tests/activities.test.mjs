@@ -214,8 +214,17 @@ test('advanced multi-checkpoint jobs genuinely require foot and parked-car inter
  assert.equal(interactActivity(state,vehicle(0,-100)).reason,'mode');
  for(let i=0;i<tour.steps.length;i++){
   const goal=tour.steps[i];
-  assert.equal(interactActivity(state,{
-   position:{x:goal.x,z:goal.z},mode:goal.mode,speed:goal.mode==='vehicle'?9:0
-  }).reason,goal.mode==='vehicle'?'moving':'far'===goal.mode?'' :null);
+  const position={x:goal.x,z:goal.z};
+  if(goal.mode==='vehicle'){
+   assert.equal(interactActivity(state,{position,mode:'vehicle',speed:9}).reason,'moving');
+   assert.equal(interactActivity(state,{position,mode:'foot',speed:0}).reason,'mode');
+  }else{
+   assert.equal(interactActivity(state,{position,mode:'vehicle',speed:0}).reason,'mode');
+  }
+  const result=interactActivity(state,{position,mode:goal.mode,speed:0});
+  assert.equal(result.event,i===tour.steps.length-1?'completed':'checkpoint');
+  state=result.state;
  }
+ assert.equal(state.completed['grand-tour'],1);
+ assert.equal(state.earned,12320);
 });
