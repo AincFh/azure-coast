@@ -21,7 +21,7 @@ export const ROAD_HANDLING=Object.freeze({
  rain:Object.freeze({label:'雨天湿滑',acceleration:.72,braking:.69,steering:.72})
 });
 export function roadHandling(weather='clear'){
- return ROAD_HANDLING[weather]||ROAD_HANDLING.clear;
+ return Object.prototype.hasOwnProperty.call(ROAD_HANDLING,weather)?ROAD_HANDLING[weather]:ROAD_HANDLING.clear;
 }
 /** Approximate braking distance in world metres at the current world speed.
  * Driver reaction time is intentionally excluded. */
