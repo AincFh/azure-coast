@@ -186,7 +186,11 @@ async def main():
                     assert '雨天' in await page.locator('#environmentLabel').inner_text()
                     await open_city_system(page, width, 'activityOpen')
                     await page.locator('#activityPanel').wait_for(state='visible', timeout=10000)
-                    assert await page.locator('#activityOfferList [data-activity-id]').count() == 3
+                    assert await page.locator('#activityOfferList [data-activity-id]').count() == 8
+                    assert await page.locator('#activityOfferList [data-activity-id="grand-tour"]').is_disabled()
+                    assert '城市新人' in await page.locator('#activityCareerRank').inner_text()
+                    assert '3/8' in await page.locator('#activityCareerSummary').inner_text()
+                    assert '还需 2 单' in await page.locator('#activityOfferList [data-activity-id="market"]').locator('xpath=..').inner_text()
                     await page.locator('#activityOfferList [data-activity-id="courier"]').click()
                     await page.locator('#activityName').wait_for(state='attached', timeout=10000)
                     assert await page.locator('#activityName').text_content() == '海岸运送'
