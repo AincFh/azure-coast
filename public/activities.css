@@ -42,3 +42,25 @@ body.activity-running .nav-status{top:248px}
 @media(max-width:450px){.activity-prompt{bottom:236px;font-size:10px}.activity-shell{max-height:calc(100dvh - 18px)}.activity-header{padding:12px}.activity-header h2{font-size:20px}.activity-header p{font-size:10px}.activity-offer{padding:12px}.activity-offer h3{font-size:17px}.activity-offer p{font-size:11px}.activity-offer footer span{font-size:9px}.activity-footer{flex-wrap:wrap;padding:10px}.activity-footer button{flex:1}.activity-offer-list{gap:7px}body.activity-running .nav-status{top:290px}#activityOpen{font-size:10px;padding:6px 8px}}
 @media(max-height:550px){.activity-prompt{bottom:94px}.activity-header p{display:none}.activity-header{padding:10px 15px}.activity-panel-body{padding:8px 15px}.activity-offer{min-height:0}}
 @media(prefers-reduced-motion:reduce){.activity-panel button{transition:none}}
+
+/* Real career progression, without hiding jobs players haven't unlocked yet. */
+.activity-career{border-radius:16px;padding:18px 20px;margin-bottom:17px;
+ border:1px solid #d2dda45c;background:linear-gradient(128deg,#234a49,#193744 72%,#2e3545)}
+.activity-career-top{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.activity-career-top>div{display:grid;gap:5px}
+.activity-career-top small{font-size:10px;letter-spacing:1.6px;color:#9cd8bc}
+.activity-career-top strong{font-size:18px;font-weight:680;color:#ffe0af}
+.activity-career-top span{font-size:12px;color:#b0decf}
+.activity-career>p{margin:10px 0;font-size:12px;line-height:1.55;color:#c0d7d5}
+.activity-career-track{height:8px;border-radius:12px;background:#06242d;
+ border:1px solid #77b1a34c;overflow:hidden}
+#activityCareerFill{width:0;height:100%;border-radius:12px;
+ background:linear-gradient(90deg,#74c3b7,#f5cf8e);transition:width .3s}
+.activity-offer.career-locked{opacity:.65;filter:saturate(.63);
+ border-style:dashed}
+.activity-offer.career-locked button:disabled{opacity:1;background:#ffffff1c;
+ color:#b8cacb;border-color:#ffffff26}
+@media(max-width:450px){.activity-career{padding:12px;margin-bottom:10px}
+ .activity-career-top strong{font-size:15px}.activity-career-top span{font-size:10px}
+ .activity-career>p{font-size:11px}}
+@media(prefers-reduced-motion:reduce){#activityCareerFill{transition:none}}
