@@ -1,6 +1,6 @@
 import {
  ACTIVITY_KEY,CITY_CONTRACTS,DISPATCH,restoreActivities,startActivity,cancelActivity,
- currentActivity,currentStep,distanceToActivity,interactActivity,interactionPrompt
+ currentActivity,currentStep,distanceToActivity,interactActivity,interactionPrompt,careerStatus
 } from './activities.mjs';
 import {navigationHint} from './journey.mjs';
 import {createCharacter} from './character-art.mjs';
@@ -54,14 +54,27 @@ export function setupCityActivities({
  const desc=goal=>goal.mode==='foot'?'下车后按 F 交互':'停车后按 F 交互';
  const format=n=>Math.round(n).toLocaleString('zh-CN');
  function renderOffers(){
+  const career=careerStatus(state);
+  $('activityCareerRank').textContent='职业 Lv.'+career.level+' · '+career.name;
+  $('activityCareerSummary').textContent='累计完成 '+format(career.total)+' 单 · '+career.unlocked+'/'+CITY_CONTRACTS.length+' 种委托已解锁 · 高阶任务收益加成 +'+Math.round(career.bonus*100)+'%';
+  $('activityCareerNext').textContent=career.nextAt===null?'已达到最高职业等级':
+   '再完成 '+career.remaining+' 单 · 解锁「'+career.nextRank+'」';
+  const lower=career.level===1?0:career.level===2?3:career.level===3?8:20;
+  const percentage=career.nextAt===null?100:
+   Math.round(Math.min(100,(career.total-lower)/(career.nextAt-lower)*100));
+  $('activityCareerFill').style.width=percentage+'%';
+  $('activityCareerFill').setAttribute('aria-valuenow',String(percentage));
   offers.innerHTML=CITY_CONTRACTS.map(contract=>{
    const count=state.completed[contract.id]||0;
-   const disabled=state.status==='active';
-   return '<article class="activity-offer">'+
-    '<div class="activity-offer-head"><small>'+contract.category+'</small><strong>+$'+format(contract.reward)+'</strong></div>'+
+   const remaining=Math.max(0,(contract.unlockAt||0)-career.total);
+   const locked=remaining>0;
+   const disabled=state.status==='active'||locked;
+   const payout=Math.round(contract.reward*(1+career.bonus));
+   return '<article class="activity-offer'+(locked?' career-locked':'')+'">'+
+    '<div class="activity-offer-head"><small>'+contract.category+'</small><strong>+$'+format(payout)+'</strong></div>'+
     '<h3>'+contract.title+'</h3><p>'+contract.description+'</p>'+
-    '<footer><span>已完成 '+format(count)+' 次 · '+contract.steps.length+' 个阶段</span>'+
-    '<button type="button" data-activity-id="'+contract.id+'" '+(disabled?'disabled':'')+'>接取任务</button></footer></article>';
+    '<footer><span>已完成 '+format(count)+' 次 · '+contract.steps.length+' 个阶段'+(locked?' · 还需 '+remaining+' 单':'')+'</span>'+
+    '<button type="button" data-activity-id="'+contract.id+'" '+(disabled?'disabled':'')+'>'+(locked?'尚未解锁':'接取任务')+'</button></footer></article>';
   }).join('');
   $('activityActiveDetail').hidden=state.status!=='active';
   if(state.status==='active'){
@@ -93,7 +106,7 @@ export function setupCityActivities({
  }
  function start(id){
   const result=startActivity(state,id);
-  if(result.reason){notify(result.reason==='busy'?'请先完成或取消正在进行的委托':'无效的委托');return}
+  if(result.reason){notify(result.reason==='busy'?'请先完成或取消正在进行的委托':result.reason==='locked'?'职业等级不足，请先完成基础委托':'无效的委托');return}
   state=result.state;save();setOpen(false);renderStatus();
   notify('已接取 '+currentActivity(state).title+' · 跟随金色标记前往目标');
  }
@@ -117,6 +130,8 @@ export function setupCityActivities({
   }
   state=result.state;save();
   if(result.event==='completed'){
+   const rank=careerStatus(state);
+   $('activityCareerRank').textContent='职业 Lv.'+rank.level+' · '+rank.name;
    onPayout(result.reward);
    notify('委托完成 · '+result.contract.title+' · 获得 $'+format(result.reward));
   }else notify('阶段完成 · 前往下一处目标');
