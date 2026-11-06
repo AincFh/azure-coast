@@ -1,4 +1,5 @@
 import {TILE_SIZE,updateTiles,pedestrianStep,canEnterVehicle} from './world.mjs';
+import {readGamepad,gamepadEdges} from './gamepad-input.mjs';
 import {ROUTE,createProgress,advanceMission,stepVehicle,collisionDamage,roadHandling,estimatedStoppingDistance} from './simulation.mjs';
 import {nearbyObstacles,moveWithCollision,restoreSession,SAVE_VERSION} from './physics.mjs';
 import {normalizeEnvironment,environmentLighting,findSafeExit,WEATHER} from './environment.mjs';
@@ -161,7 +162,7 @@ if(key==='b'){if(fleetUI.isOpen())fleetUI.close();if(activities.isOpen())activit
 if(key==='k'){if(citizenUI.isOpen())citizenUI.close();if(housing.isOpen())housing.close();if(activities.isOpen())activities.close();if(garageUI.isOpen())garageUI.close();if(navigation.isOpen())navigation.closeMap();fleetUI.toggle();return}
 if(key==='q'){if(livingUI.isOpen())livingUI.close();citizenUI.interact();return}
 if(key==='u'){if(citizenUI.isOpen())citizenUI.close();livingUI.interact();return}
-if(key==='f'){if(!activities.active()&&livingUI.access()&&(onFoot||Math.abs(velocity)<=3)){livingUI.interact();return}if(!activities.active()&&housing.canInteract()){housing.interact();return}if(!activities.active()&&fleetUI.access()){fleetUI.open();return}if(!activities.active()&&garageUI.access()){garageUI.open();return}if(!activities.active()&&onFoot&&citizenWorld.nearby(avatar.position)){citizenUI.interact();return}activities.interact();return}if(e.key.toLowerCase()==='p'||e.key==='Escape')togglePause();if(e.key.toLowerCase()==='m')toggleMap()});document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;b.addEventListener('pointerdown',e=>{keys[k]=true;b.setPointerCapture(e.pointerId)});b.addEventListener('pointerup',()=>keys[k]=false);b.addEventListener('pointercancel',()=>keys[k]=false)});let started=false,paused=false,view=0,velocity=0,heading=0,last=performance.now(),done=false,collisions=0,collisionCooldown=0;
+if(key==='f'){handleWorldInteraction();return}if(e.key.toLowerCase()==='p'||e.key==='Escape')togglePause();if(e.key.toLowerCase()==='m')toggleMap()});document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;b.addEventListener('pointerdown',e=>{keys[k]=true;b.setPointerCapture(e.pointerId)});b.addEventListener('pointerup',()=>keys[k]=false);b.addEventListener('pointercancel',()=>keys[k]=false)});let started=false,paused=false,view=0,velocity=0,heading=0,last=performance.now(),done=false,collisions=0,collisionCooldown=0;
 const renderQualityUI=setupRenderQualityUI({doc:document,quality:renderQuality,
  getActive:()=>started&&!paused});
 const SESSION_KEY='azure-coast-session-v3';
@@ -262,14 +263,55 @@ const livingUI=setupLivingUI({
   !fleetUI.isOpen()&&!audioUI.isOpen()&&!citizenUI.isOpen(),
  clearControls,notify:cityToast
 });
+/** Keyboard F and controller X share a single interaction priority chain. */
+function handleWorldInteraction(){
+ if(!activities.active()&&livingUI.access()&&(onFoot||Math.abs(velocity)<=3)){livingUI.interact();return}
+ if(!activities.active()&&housing.canInteract()){housing.interact();return}
+ if(!activities.active()&&fleetUI.access()){fleetUI.open();return}
+ if(!activities.active()&&garageUI.access()){garageUI.open();return}
+ if(!activities.active()&&onFoot&&citizenWorld.nearby(avatar.position)){citizenUI.interact();return}
+ activities.interact();
+}
+let priorGamepadButtons={};
+function sampleController(){
+ let controller=null;
+ try{if(typeof navigator.getGamepads==='function'){
+  const available=navigator.getGamepads();
+  controller=Array.from(available||[]).find(p=>p?.connected&&p.mapping==='standard')||null;
+ }}catch{ /* Browsers may disable gamepad access in sandboxed contexts. */ }
+ const controls=readGamepad(document.hidden?null:controller);
+ const edges=gamepadEdges(priorGamepadButtons,controls);priorGamepadButtons=edges.held;
+ if(!controls.connected)return controls;
+ if(!started){
+  if(edges.pressed.pause)document.querySelector('#begin')?.click();
+  return controls;
+ }
+ if(edges.pressed.pause)togglePause();
+ if(!started||paused)return controls;
+ if(housing.inside()){
+  if(edges.pressed.enter){if(housing.decorating())housing.closeDecorate();else housing.exit()}
+  return controls;
+ }
+ const blocked=navigation.isOpen()||activities.isOpen()||garageUI.isOpen()||
+  housing.isOpen()||fleetUI.isOpen()||audioUI.isOpen()||citizenUI.isOpen()||
+  livingUI.isOpen()||renderQualityUI.isOpen()||
+  document.body.classList.contains('mobile-actions-open');
+ if(!blocked){
+  if(edges.pressed.enter)switchMode();
+  if(edges.pressed.camera)view=(view+1)%3;
+  if(edges.pressed.interact)handleWorldInteraction();
+ }
+ return controls;
+}
 let lastVisualFrame=0,lastTrafficHudUpdate=-Infinity,cameraInitialized=false;
 // Headless Chromium runs with CPU-based WebGL. Throttle its frame rate during
 // functional checks without reducing the interactive frame rate for players.
 const automatedRenderer=softwareRenderer;
 function tick(now){requestAnimationFrame(tick);const dt=Math.min((now-last)/1000,.05);last=now;
+const controller=sampleController();
 if(housing.inside()){
  if(started&&!paused)livingProfile=advanceLiving(livingProfile,dt,{onFoot:true});
- const isMoving=!!(keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright);
+ const isMoving=!!(keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright||controller.walkForward>.2||controller.walkBackward>.2||controller.left>.2||controller.right>.2);
  audioEngine.update({vehicleId:fleetProfile.active,velocity:0,onFoot:true,inside:true,
   moving:isMoving&&!housing.decorating(),sprinting:!!keys.shift,
   paused:paused||housing.decorating()||audioUI.isOpen(),active:started},now);
@@ -278,14 +320,18 @@ if(housing.inside()){
  if(now-lastVisualFrame>=indoorBudget){housing.render();lastVisualFrame=now}
  return;
 }
-if(started&&!paused&&!navigation.isOpen()&&!activities.isOpen()&&!garageUI.isOpen()&&!housing.isOpen()&&!fleetUI.isOpen()&&!audioUI.isOpen()&&!citizenUI.isOpen()&&!livingUI.isOpen()&&!document.body.classList.contains('mobile-actions-open')&&onFoot){const sprintAllowed=!!keys.shift&&canSprint(livingProfile);const beforeFoot={x:avatar.position.x,z:avatar.position.z};const p=pedestrianStep(avatar.position,{forward:keys.w||keys.arrowup,back:keys.s||keys.arrowdown,left:keys.a||keys.arrowleft,right:keys.d||keys.arrowright,sprint:sprintAllowed},dt);const walk=moveWithCollision(avatar.position,p,.7,nearbyObstacles(avatar.position.x,avatar.position.z));avatar.position.x=walk.x;avatar.position.z=walk.z;avatar.rotation.y=p.heading;livingProfile=advanceLiving(livingProfile,dt,{onFoot:true,moving:Math.hypot(walk.x-beforeFoot.x,walk.z-beforeFoot.z)>.01,sprinting:sprintAllowed,distance:Math.hypot(walk.x-beforeFoot.x,walk.z-beforeFoot.z)});document.querySelector('#speed').textContent=sprintAllowed?'RUN':'WALK';document.querySelector('#gear').textContent='EXPLORATION · E TO ENTER';roadStopping.textContent='步行探索';}if(started&&!paused&&!navigation.isOpen()&&!activities.isOpen()&&!garageUI.isOpen()&&!housing.isOpen()&&!fleetUI.isOpen()&&!audioUI.isOpen()&&!citizenUI.isOpen()&&!livingUI.isOpen()&&!document.body.classList.contains('mobile-actions-open')&&!onFoot){const prev={speed:velocity,heading,x:car.position.x,z:car.position.z};const hasEnergy=livingProfile.fuel[fleetProfile.active]>.05;
+if(started&&!paused&&!navigation.isOpen()&&!activities.isOpen()&&!garageUI.isOpen()&&!housing.isOpen()&&!fleetUI.isOpen()&&!audioUI.isOpen()&&!citizenUI.isOpen()&&!livingUI.isOpen()&&!document.body.classList.contains('mobile-actions-open')&&onFoot){const sprintAllowed=!!(keys.shift||controller.sprint)&&canSprint(livingProfile);const beforeFoot={x:avatar.position.x,z:avatar.position.z};const p=pedestrianStep(avatar.position,{forward:keys.w||keys.arrowup||controller.walkForward>.2,back:keys.s||keys.arrowdown||controller.walkBackward>.2,left:keys.a||keys.arrowleft||controller.left>.2,right:keys.d||keys.arrowright||controller.right>.2,sprint:sprintAllowed},dt);const walk=moveWithCollision(avatar.position,p,.7,nearbyObstacles(avatar.position.x,avatar.position.z));avatar.position.x=walk.x;avatar.position.z=walk.z;avatar.rotation.y=p.heading;livingProfile=advanceLiving(livingProfile,dt,{onFoot:true,moving:Math.hypot(walk.x-beforeFoot.x,walk.z-beforeFoot.z)>.01,sprinting:sprintAllowed,distance:Math.hypot(walk.x-beforeFoot.x,walk.z-beforeFoot.z)});document.querySelector('#speed').textContent=sprintAllowed?'RUN':'WALK';document.querySelector('#gear').textContent='EXPLORATION · E TO ENTER';roadStopping.textContent='步行探索';}if(started&&!paused&&!navigation.isOpen()&&!activities.isOpen()&&!garageUI.isOpen()&&!housing.isOpen()&&!fleetUI.isOpen()&&!audioUI.isOpen()&&!citizenUI.isOpen()&&!livingUI.isOpen()&&!document.body.classList.contains('mobile-actions-open')&&!onFoot){const prev={speed:velocity,heading,x:car.position.x,z:car.position.z};const hasEnergy=livingProfile.fuel[fleetProfile.active]>.05;
 const tuning=fleetTuning(fleetProfile,garageTuning(garageProfile));
 tuning.weather=environment.weather;
 // Even on an empty tank, keep low-power emergency crawling so a player can
 // drive to a physical energy station instead of getting permanently stranded.
 if(!hasEnergy)tuning.maxSpeed=Math.min(3,tuning.maxSpeed);
-const next=stepVehicle(prev,{forward:keys.w||keys.arrowup,reverse:keys.s||keys.arrowdown,
- left:keys.a||keys.arrowleft,right:keys.d||keys.arrowright},dt,tuning);velocity=next.speed;heading=next.heading;car.rotation.y=heading;updateRoadTelemetry(tuning);const drive=moveWithCollision(car.position,{x:Math.max(-640,Math.min(640,next.x)),z:Math.max(-640,Math.min(640,next.z))},2.3,nearbyObstacles(car.position.x,car.position.z));car.position.x=drive.x;car.position.z=drive.z;livingProfile=advanceLiving(livingProfile,dt,{distance:Math.hypot(drive.x-prev.x,drive.z-prev.z),onFoot:false,carId:fleetProfile.active});if(drive.hit&&collisionCooldown<=0){audioEngine.cue('impact',Math.min(1,Math.abs(velocity)/24));progress.damage=Math.min(100,progress.damage+Math.max(1,Math.round(collisionDamage(velocity)*garageTuning(garageProfile).impactFactor)));velocity*=-.12;collisionCooldown=1.5;updateRoute();persist()}updateWheels(velocity*dt);progress.distance+=Math.abs(velocity)*dt;progress.bestSpeed=Math.max(progress.bestSpeed,Math.abs(velocity)*3.6);collisionCooldown=Math.max(0,collisionCooldown-dt);if(collisionCooldown===0&&trafficWorld.nearbyPlayer(car.position,4.5)){audioEngine.cue('impact',Math.min(1,Math.abs(velocity)/24));progress.damage=Math.min(100,progress.damage+Math.max(1,Math.round(collisionDamage(velocity)*garageTuning(garageProfile).impactFactor)));velocity*=-.22;collisionCooldown=1.5;document.querySelector('#condition').textContent=(100-progress.damage)+'%';persist()}const result=advanceMission(progress,car.position.x,car.position.z);if(result.completed){audioEngine.cue('complete');progress=result.progress;persist();updateRoute();const toast=document.querySelector('#toast');toast.textContent=`任务完成 · ${result.completed.name} · +$${result.completed.reward.toLocaleString()}`;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3500)}if(progress.damage>=100){velocity=0;progress.damage=45;car.position.set(0,.15,12);persist();updateRoute()}if(Math.floor(now/3000)!==Math.floor((now-dt*1000)/3000)){persist();saveSession()}const km=Math.round(Math.abs(velocity)*3.6);document.querySelector('#speed').textContent=String(km).padStart(3,'0');document.querySelector('#speedbar').style.width=Math.min(100,km/1.9)+'%';document.querySelector('#gear').textContent='GEAR '+String(Math.max(1,Math.ceil(km/45))).padStart(2,'0')+' / AUTO · SPORT';}audioEngine.update({vehicleId:fleetProfile.active,velocity,
+const next=stepVehicle(prev,{
+ forward:keys.w||keys.arrowup?1:controller.forward,
+ reverse:keys.s||keys.arrowdown?1:controller.reverse,
+ left:keys.a||keys.arrowleft?1:controller.left,
+ right:keys.d||keys.arrowright?1:controller.right
+},dt,tuning);velocity=next.speed;heading=next.heading;car.rotation.y=heading;updateRoadTelemetry(tuning);const drive=moveWithCollision(car.position,{x:Math.max(-640,Math.min(640,next.x)),z:Math.max(-640,Math.min(640,next.z))},2.3,nearbyObstacles(car.position.x,car.position.z));car.position.x=drive.x;car.position.z=drive.z;livingProfile=advanceLiving(livingProfile,dt,{distance:Math.hypot(drive.x-prev.x,drive.z-prev.z),onFoot:false,carId:fleetProfile.active});if(drive.hit&&collisionCooldown<=0){audioEngine.cue('impact',Math.min(1,Math.abs(velocity)/24));progress.damage=Math.min(100,progress.damage+Math.max(1,Math.round(collisionDamage(velocity)*garageTuning(garageProfile).impactFactor)));velocity*=-.12;collisionCooldown=1.5;updateRoute();persist()}updateWheels(velocity*dt);progress.distance+=Math.abs(velocity)*dt;progress.bestSpeed=Math.max(progress.bestSpeed,Math.abs(velocity)*3.6);collisionCooldown=Math.max(0,collisionCooldown-dt);if(collisionCooldown===0&&trafficWorld.nearbyPlayer(car.position,4.5)){audioEngine.cue('impact',Math.min(1,Math.abs(velocity)/24));progress.damage=Math.min(100,progress.damage+Math.max(1,Math.round(collisionDamage(velocity)*garageTuning(garageProfile).impactFactor)));velocity*=-.22;collisionCooldown=1.5;document.querySelector('#condition').textContent=(100-progress.damage)+'%';persist()}const result=advanceMission(progress,car.position.x,car.position.z);if(result.completed){audioEngine.cue('complete');progress=result.progress;persist();updateRoute();const toast=document.querySelector('#toast');toast.textContent=`任务完成 · ${result.completed.name} · +$${result.completed.reward.toLocaleString()}`;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3500)}if(progress.damage>=100){velocity=0;progress.damage=45;car.position.set(0,.15,12);persist();updateRoute()}if(Math.floor(now/3000)!==Math.floor((now-dt*1000)/3000)){persist();saveSession()}const km=Math.round(Math.abs(velocity)*3.6);document.querySelector('#speed').textContent=String(km).padStart(3,'0');document.querySelector('#speedbar').style.width=Math.min(100,km/1.9)+'%';document.querySelector('#gear').textContent='GEAR '+String(Math.max(1,Math.ceil(km/45))).padStart(2,'0')+' / AUTO · SPORT';}audioEngine.update({vehicleId:fleetProfile.active,velocity,
   accelerating:!!(keys.w||keys.arrowup),onFoot,
   moving:!!(keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright),
   sprinting:!!keys.shift,weather:environment.weather,

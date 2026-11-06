@@ -33,7 +33,8 @@ export function estimatedStoppingDistance(speed,weather='clear',baseBrake=1){
 }
 export function stepVehicle(state,input,dt,tuning={}){
  const t=Math.max(0,Math.min(.05,Number.isFinite(dt)?dt:0));
- const throttle=Number(!!input.forward)-Number(!!input.reverse);
+ const analog=v=>typeof v==='number'?(Number.isFinite(v)?Math.max(0,Math.min(1,v)):0):Number(!!v);
+ const throttle=analog(input.forward)-analog(input.reverse);
  const acceleration=Number.isFinite(tuning.acceleration)?
   Math.max(.65,Math.min(2.8,tuning.acceleration)):1;
  const brake=Number.isFinite(tuning.braking)?Math.max(.7,Math.min(1.3,tuning.braking)):1;
@@ -50,7 +51,7 @@ export function stepVehicle(state,input,dt,tuning={}){
  speed-=Math.sign(speed)*Math.min(Math.abs(speed),3.4*t);
  speed=Math.max(-16,Math.min(maxSpeed,speed));
  if(!throttle)speed*=Math.pow(.987,t*60);
- const steering=Number(!!input.left)-Number(!!input.right);
+ const steering=analog(input.left)-analog(input.right);
  const heading=state.heading+steering*t*speed*.016*responsiveness*surface.steering;
  return {speed,heading,x:state.x-Math.sin(heading)*speed*t,
   z:state.z-Math.cos(heading)*speed*t};

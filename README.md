@@ -68,3 +68,6 @@ node scripts/release-gate.mjs
 ---
 
 **Project status: IN DEVELOPMENT · Release gate: BLOCKED**
+
+## 2026-11 · 标准手柄模拟驾驶与城市交互
+新增标准映射（Gamepad API `mapping=standard`）手柄操作：左摇杆控制步行方向/车辆转向，右扳机 RT 按压力度加速，左扳机 LT 渐进刹车/倒车，A 上下车，X 与 NPC、服务站及任务检查点互动，B 切换摄像机，Start 开始/暂停，LB/左摇杆按键奔跑。摇杆使用死区防止漂移，一次按键只触发一次交互，断线或浏览器禁止手柄时自动回退到现有键盘与触控。原有物理天气、碰撞、速度限制和存档保持兼容。增加纯逻辑回归测试与浏览器脚本语法检查；仍需要实体手柄实际试玩及手柄品牌兼容性验收。
