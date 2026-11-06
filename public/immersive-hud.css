@@ -196,3 +196,15 @@
 @media(prefers-reduced-motion:reduce){
   .hud.object,.nav-status{transition:none!important}
 }
+
+/* Driving conditions belong to the instrument cluster; never cover the road. */
+.road-telemetry{display:flex;flex-direction:column;align-items:flex-end;
+ gap:3px;margin-top:9px;max-width:230px;line-height:1.3}
+.road-telemetry small{font:600 10px/1.4 system-ui,sans-serif;letter-spacing:.25px;
+ color:#adede2;font-variant-numeric:tabular-nums;text-align:right}
+.road-telemetry[data-weather=rain] small{color:#f6d098}
+.road-telemetry[data-weather=overcast] small{color:#c2dfda}
+@media(max-width:850px){
+ .road-telemetry{margin-top:7px;gap:2px;max-width:100%}
+ .road-telemetry small{font-size:9px!important;white-space:normal;line-height:1.3}
+}
